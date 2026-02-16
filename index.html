@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMC Pre-Compliance Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>EMC Assistant</h1>
+            <p>Interactive Radiated Emissions Pre-Compliance Tool</p>
+        </header>
+
+        <!-- Full ESCI 7 Interface Simulation -->
+        <div class="card esci-chassis">
+            <div class="esci-display-area">
+                <!-- Screen -->
+                <div class="esci-screen">
+                    <div class="screen-header">
+                        <span class="header-left" id="center-freq-readout">CENTER 500.00 MHz</span>
+                        <span class="header-center">R&S ESCI 7 SIMULATION</span>
+                        <span class="header-right rbw-ind">RBW: 120 kHz</span>
+                    </div>
+                    <div class="screen-plot-area">
+                        <canvas id="esci-canvas" width="600" height="350"></canvas>
+                        <div id="marker-readout" class="marker-readout" style="display:none;">
+                            MKR: <span id="mkr-freq">--</span> MHz <br>
+                            LVL: <span id="mkr-level">--</span> dBµV/m
+                        </div>
+                    </div>
+                    <div class="screen-footer">
+                        <span id="footer-msg">System Ready.</span>
+                        <span>ATT: AUTO</span>
+                    </div>
+                </div>
+
+                <!-- Softkeys -->
+                <div class="softkeys-container">
+                    <button class="softkey" id="sk-1"></button>
+                    <button class="softkey" id="sk-2"></button>
+                    <button class="softkey" id="sk-3"></button>
+                    <button class="softkey" id="sk-4"></button>
+                    <button class="softkey" id="sk-5"></button>
+                    <button class="softkey" id="sk-6"></button>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="esci-control-panel">
+                <!-- Measurement Block -->
+                <div class="control-group meas-keys">
+                    <div class="group-label">MEASUREMENT</div>
+                    <div class="key-row">
+                        <button class="hardkey" id="key-freq">FREQ</button>
+                        <button class="hardkey" id="key-span">SPAN</button>
+                        <button class="hardkey" id="key-ampt">AMPT</button>
+                    </div>
+                    <div class="key-row">
+                        <button class="hardkey" id="key-bw">BW</button>
+                        <button class="hardkey" id="key-trace">TRACE</button>
+                    </div>
+                </div>
+
+                <!-- Marker & Search -->
+                <div class="control-group">
+                    <div class="group-label">MARKER</div>
+                    <div class="key-row">
+                        <button class="hardkey" id="key-mkr">MKR</button>
+                        <button class="hardkey" id="key-mkr-fctn">MKR-></button>
+                    </div>
+                    <div class="key-row">
+                        <button class="hardkey" id="key-peak">PEAK</button>
+                        <button class="hardkey" id="key-search">SEARCH</button>
+                    </div>
+                </div>
+
+                <!-- System -->
+                <div class="control-group">
+                    <div class="group-label">SYSTEM</div>
+                    <div class="key-row">
+                        <button class="hardkey" id="key-setup">SETUP</button>
+                        <button class="hardkey" id="key-print">PRINT</button>
+                    </div>
+                    <div class="key-row">
+                        <button class="hardkey" id="key-preset">PRESET</button>
+                    </div>
+                </div>
+
+                <!-- Rotary Knob -->
+                <div class="rotary-knob-container">
+                    <div class="knob-inner"></div>
+                </div>
+
+                <!-- Numeric Keypad -->
+                <div class="control-group">
+                    <div class="group-label">ENTRY</div>
+                    <div class="numpad-grid">
+                        <button class="numkey">7</button><button class="numkey">8</button><button
+                            class="numkey">9</button>
+                        <button class="unitkey">GHz</button>
+                        <button class="numkey">4</button><button class="numkey">5</button><button
+                            class="numkey">6</button>
+                        <button class="unitkey">MHz</button>
+                        <button class="numkey">1</button><button class="numkey">2</button><button
+                            class="numkey">3</button>
+                        <button class="unitkey">kHz</button>
+                        <button class="numkey">0</button><button class="numkey">.</button><button
+                            class="numkey">⌫</button>
+                        <button class="unitkey">Hz</button>
+                        <!-- GO Button -->
+                        <button class="hardkey large" id="key-go"
+                            style="grid-column: span 4; background:#4c9; margin-top:4px;">GO / ENTER</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Calculator Bounds: Merged Config -->
+        <div class="card">
+            <h2><span class="icon">🧮</span> Simulation & Calculator</h2>
+
+            <div class="calculator-grid">
+                <div class="inputs">
+                    <!-- Source Mode Selector (Moved Here) -->
+                    <div class="input-group"
+                        style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+                        <label>Emission Mode</label>
+                        <div class="toggle-group">
+                            <input type="radio" id="mode-clock" name="source-mode" value="clock" checked>
+                            <label for="mode-clock" class="toggle-btn" style="flex:1; text-align:center;">Clock</label>
+
+                            <input type="radio" id="mode-smps" name="source-mode" value="smps">
+                            <label for="mode-smps" class="toggle-btn" style="flex:1; text-align:center;">SMPS</label>
+                        </div>
+                    </div>
+
+                    <!-- Frequency -->
+                    <div class="input-group">
+                        <label>Frequency (MHz)</label>
+                        <input type="number" id="freq" placeholder="Fund Ctr" value="100">
+                    </div>
+
+                    <!-- Voltage -->
+                    <div class="input-group" style="margin-top:10px;">
+                        <label>Receiver Reading (dBµV)</label>
+                        <input type="number" id="voltage" placeholder="Reading" value="60">
+                    </div>
+
+                    <!-- Antenna Factor -->
+                    <div class="input-group" style="margin-top:10px;">
+                        <label>Antenna Factor (dB/m)</label>
+                        <select id="ant-select" style="margin-bottom: 5px;">
+                            <option value="upa">Teseq UPA 6109</option>
+                            <option value="bicon">Generic Biconicon</option>
+                            <option value="horn">Generic Horn</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <input type="number" id="af" placeholder="AF" value="18">
+                    </div>
+
+                    <!-- Cable Loss -->
+                    <div class="input-group" style="margin-top:10px;">
+                        <label>Cable Loss (dB)</label>
+                        <input type="number" id="cable" placeholder="Loss" value="1.5">
+                    </div>
+
+                    <!-- Realism Toggles (Compact) -->
+                    <div class="input-group" style="margin-top:15px; border-top: 1px solid #333; paddingTop: 10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="margin:0;">Jitter</label>
+                            <input type="checkbox" id="toggle-jitter" checked>
+                        </div>
+                        <div style="margin-top:5px;">
+                            <label style="font-size:0.8rem;">Filter Strength</label>
+                            <input type="range" id="filter-slider" min="0" max="100" value="10" style="width:100%;">
+                        </div>
+                        <!-- Hidden/Fixed values for Noise/Realism to simplify UI -->
+                        <input type="hidden" id="realism-slider" value="80">
+                        <input type="hidden" id="noise-slider" value="20">
+                    </div>
+
+                    <button class="primary-btn" id="calc-btn" style="margin-top: 20px;">Calculate & Update Sim</button>
+                </div>
+
+                <div class="results-area">
+                    <div class="result-row">
+                        <span>Field Strength:</span>
+                        <strong id="total-field">--</strong>
+                    </div>
+                    <div class="result-row">
+                        <span>Limit Line:</span>
+                        <strong id="limit-val">--</strong>
+                    </div>
+                    <div class="result-row margin-row" id="result-box">
+                        <span>Margin:</span>
+                        <strong id="margin-val">--</strong>
+                    </div>
+
+                    <!-- Distance & Class moved to Result Side to save vertical space -->
+                    <div style="margin-top:20px; border-top:1px solid #444; padding-top:10px;">
+                        <div class="input-group">
+                            <label>Meas. Distance</label>
+                            <select id="dist">
+                                <option value="3" selected>3 Meters</option>
+                                <option value="10">10 Meters</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-top:5px;">
+                            <label>Limit Class</label>
+                            <select id="class">
+                                <option value="B" selected>Class B (Res)</option>
+                                <option value="A">Class A (Ind)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculation Proof Section -->
+            <div class="proof-section">
+                <button class="toggle-proof-btn" id="toggle-proof">Show/Hide Manual Calculation Proof</button>
+
+                <div id="proof-content" class="proof-content hidden">
+                    <h3>Step-by-Step Verification</h3>
+                    <p style="margin-bottom: 20px; color: #666; font-size: 0.9rem;">
+                        Compliance requires the total Field Strength be below the Limit Line.
+                        <br>Formula: Field Strength = Reading + Antenna Factor + Cable Loss
+                    </p>
+
+                    <!-- Step 1: Voltage -->
+                    <div class="proof-step">
+                        <div class="step-header">
+                            <div class="step-num">1</div>
+                            <h4>Receiver Reading (Volts)</h4>
+                            <div class="step-math" id="math-voltage">Input: <strong>--</strong></div>
+                            <button class="bio-toggle" data-target="bio-volt">?</button>
+                        </div>
+                        <div class="bio-content hidden" id="bio-volt">
+                            <strong>What is this?</strong> The raw voltage level measured at the receiver's RF input
+                            port.
+                            It is typically expressed in dBµV.
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Antenna Factor -->
+                    <div class="proof-step">
+                        <div class="step-header">
+                            <div class="step-num">2</div>
+                            <h4>Antenna Factor (dB/m)</h4>
+                            <div class="step-math" id="math-af">Add: <strong>--</strong></div>
+                            <button class="bio-toggle" data-target="bio-af">?</button>
+                        </div>
+                        <div class="bio-content hidden" id="bio-af">
+                            <strong>What is this?</strong> The conversion factor that relates the voltage at the antenna
+                            terminals to the actual electric field strength.
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Cable Loss -->
+                    <div class="proof-step">
+                        <div class="step-header">
+                            <div class="step-num">3</div>
+                            <h4>Cable Attenuation (Loss)</h4>
+                            <div class="step-math" id="math-cable">Add: <strong>--</strong></div>
+                            <button class="bio-toggle" data-target="bio-cable">?</button>
+                        </div>
+                        <div class="bio-content hidden" id="bio-cable">
+                            <strong>What is this?</strong> Signal power lost as it travels through the coaxial cable.
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Total -->
+                    <div class="proof-step" style="border-bottom: 2px solid var(--primary);">
+                        <div class="step-header">
+                            <div class="step-num">4</div>
+                            <h4>Total Field Strength</h4>
+                            <div class="step-math large-math" id="math-total"><strong>= --</strong></div>
+                        </div>
+                        <div class="step-explanation">
+                            Compare this value to the Limit Line to determine Pass/Fail.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Procedure Checklist -->
+        <div class="card">
+            <h2><span class="icon">📝</span> Measurement Procedure</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <div class="checklist-group">
+                <h3>1. Setup & Validation</h3>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="1">
+                    <span>Verify Ambient Noise (Receiver scan with Antenna disconnected / terminated)</span>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="2">
+                    <span>Connect Antenna (e.g., Teseq UPA 6109) to Receiver RF Input</span>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="3">
+                    <span>Check Setup Photos for cable routing (minimize loops)</span>
+                </div>
+            </div>
+
+            <div class="checklist-group">
+                <h3>2. Receiver Config (ESCI 7)</h3>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="4">
+                    <span>Set Frequency Range (Start/Stop) or Span (30-1000 MHz)</span>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="5">
+                    <span>Set RBW = 120 kHz (Standard for CISPR 30M-1G)</span>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="6">
+                    <span>Select Detector: Peak (fast scan) or Quasi-Peak (final)</span>
+                </div>
+            </div>
+
+            <div class="checklist-group">
+                <h3>3. Measurement & Maximization</h3>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="7">
+                    <span>Scan Height: Move antenna 1m to 4m (Max Hold)</span>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="8">
+                    <span>Rotate Turntable: 0 to 360 degrees (find max azimuth)</span>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="9">
+                    <span>Check Polarization: Test both Horizontal & Vertical</span>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" data-id="10">
+                    <span>Final: Perform QP Meas on worst-case frequencies</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
