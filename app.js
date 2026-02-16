@@ -85,7 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
         mEl.style.color = margin >= 6 ? '#4c9' : (margin >= 0 ? 'var(--warning)' : 'var(--danger)');
         box.style.borderLeft = margin >= 0 ? "5px solid var(--success)" : "5px solid var(--danger)";
 
-        // 5. Update Simulation State
+        // 5. Update Proof Section
+        document.getElementById('math-voltage').innerHTML = `Input: <strong>${voltVal.toFixed(1)} dBµV</strong>`;
+        document.getElementById('math-af').innerHTML = `Add: <strong>${afVal.toFixed(1)} dB/m</strong>`;
+        document.getElementById('math-cable').innerHTML = `Add: <strong>${cabVal.toFixed(1)} dB</strong>`;
+        document.getElementById('math-total').innerHTML = `<strong>= ${totalE.toFixed(2)} dBµV/m</strong>`;
+
+        // 6. Update Simulation State
         // Store the EXACT calculated level to be used as the Fundamental Amplitude
         Receiver.simulatedLevel = totalE;
 
@@ -306,16 +312,24 @@ document.addEventListener('DOMContentLoaded', () => {
             writeFooter(`Entry: ${Receiver.inputBuffer}`);
         });
     });
+    // Helper to calc start/stop from center/span
+    function recalcFreqRange() {
+        Receiver.freq.start = Receiver.freq.center - Receiver.freq.span / 2;
+        Receiver.freq.stop = Receiver.freq.center + Receiver.freq.span / 2;
+    }
+
     // GO/Enter
     function handleGo(scale = 1) {
         if (!Receiver.inputBuffer) return;
         const v = parseFloat(Receiver.inputBuffer) * scale;
         if (Receiver.activeParam === 'CENTER') {
             Receiver.freq.center = v;
-            Receiver.freq.start = v - Receiver.freq.span / 2; Receiver.freq.stop = v + Receiver.freq.span / 2;
+            recalcFreqRange();
         }
         if (Receiver.activeParam === 'SPAN') {
-            Receiver.freq.span = v; updateFreqs();
+            Receiver.freq.span = v;
+            recalcFreqRange();
+            updateFreqs();
         }
         Receiver.inputBuffer = ''; Receiver.activeParam = null;
         drawScreen();
@@ -338,8 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSpanDown.addEventListener('click', () => {
             Receiver.freq.span = Math.max(0.001, Receiver.freq.span / 2); // Prevent 0 or negative
             updateFreqs(); // Update internal min/max
-            Receiver.freq.start = Receiver.freq.center - Receiver.freq.span / 2;
-            Receiver.freq.stop = Receiver.freq.center + Receiver.freq.span / 2;
+            recalcFreqRange();
             drawScreen();
             writeFooter(`Span: ${Receiver.freq.span.toFixed(2)} MHz`);
         });
@@ -349,12 +362,56 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSpanUp.addEventListener('click', () => {
             Receiver.freq.span = Math.min(1000, Receiver.freq.span * 2); // Cap at 1000 MHz
             updateFreqs(); // Update internal min/max
-            Receiver.freq.start = Receiver.freq.center - Receiver.freq.span / 2;
-            Receiver.freq.stop = Receiver.freq.center + Receiver.freq.span / 2;
+            recalcFreqRange();
             drawScreen();
             writeFooter(`Span: ${Receiver.freq.span.toFixed(2)} MHz`);
         });
     }
+
+    // PRESET (Reset) Button
+    document.getElementById('key-preset').addEventListener('click', () => {
+        // Reset Logic
+        Receiver.freq.center = 1000; // Standard for checking
+        Receiver.freq.span = 1000; // Full span
+        Receiver.freq.start = 0;
+        Receiver.freq.stop = 1000; // But wait, standard preset might be 100 center?
+        // Let's use 100MHz Center, 100MHz Span as per initial load
+        Receiver.freq.center = 100;
+        Receiver.freq.span = 100;
+        recalcFreqRange();
+
+        Receiver.marker.active = false;
+        Receiver.inputBuffer = '';
+        Receiver.activeParam = null;
+
+        // Reset Inputs in Calc too? User asked for "reset button for the interface"
+        // Let's just reset the RECEIVER state for now as that's the main "Breakable" part
+
+        updateFreqs();
+        drawScreen();
+        writeFooter('System Reset Complete.');
+    });
+
+    // Proof Section Toggles
+    const proofToggleBtn = document.getElementById('toggle-proof');
+    const proofContent = document.getElementById('proof-content');
+
+    if (proofToggleBtn && proofContent) {
+        proofToggleBtn.addEventListener('click', () => {
+            proofContent.classList.toggle('hidden');
+        });
+    }
+
+    // Bio Toggles (Question Marks)
+    document.querySelectorAll('.bio-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+                targetEl.classList.toggle('hidden');
+            }
+        });
+    });
 
     // Init
     performCalculation(true);

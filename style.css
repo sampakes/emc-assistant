@@ -373,6 +373,17 @@ h2 {
     background: #333;
 }
 
+.danger-btn {
+    background: linear-gradient(to bottom, #d32f2f, #b71c1c);
+    border-color: #8a1010;
+    color: white;
+}
+
+.danger-btn:hover {
+    background: linear-gradient(to bottom, #f44336, #d32f2f);
+    box-shadow: 0 0 10px rgba(211, 47, 47, 0.4);
+}
+
 /* Specific Key Styles */
 #key-go {
     background: linear-gradient(to bottom, #2da44e, #24823d) !important;
