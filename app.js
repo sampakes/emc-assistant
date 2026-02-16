@@ -330,6 +330,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('key-go').addEventListener('click', () => handleGo(1));
 
+    // Span Control Buttons (Left/Right)
+    const btnSpanDown = document.getElementById('btn-span-down');
+    const btnSpanUp = document.getElementById('btn-span-up');
+
+    if (btnSpanDown) {
+        btnSpanDown.addEventListener('click', () => {
+            Receiver.freq.span = Math.max(0.001, Receiver.freq.span / 2); // Prevent 0 or negative
+            updateFreqs(); // Update internal min/max
+            Receiver.freq.start = Receiver.freq.center - Receiver.freq.span / 2;
+            Receiver.freq.stop = Receiver.freq.center + Receiver.freq.span / 2;
+            drawScreen();
+            writeFooter(`Span: ${Receiver.freq.span.toFixed(2)} MHz`);
+        });
+    }
+
+    if (btnSpanUp) {
+        btnSpanUp.addEventListener('click', () => {
+            Receiver.freq.span = Math.min(1000, Receiver.freq.span * 2); // Cap at 1000 MHz
+            updateFreqs(); // Update internal min/max
+            Receiver.freq.start = Receiver.freq.center - Receiver.freq.span / 2;
+            Receiver.freq.stop = Receiver.freq.center + Receiver.freq.span / 2;
+            drawScreen();
+            writeFooter(`Span: ${Receiver.freq.span.toFixed(2)} MHz`);
+        });
+    }
+
     // Init
     performCalculation(true);
 

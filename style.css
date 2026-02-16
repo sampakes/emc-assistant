@@ -386,42 +386,47 @@ h2 {
     box-shadow: 0 0 15px rgba(46, 164, 78, 0.4);
 }
 
-/* Knob - Sleek Aluminum Look */
-.rotary-knob-container {
-    width: 90px;
-    height: 90px;
-    background: conic-gradient(#444, #666, #444, #666, #444);
+/* Span Control Buttons */
+.span-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.span-btn-row {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.span-btn {
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #555, #333);
+    color: #eee;
+    font-size: 1.2rem;
     border: 2px solid #222;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: all 0.1s;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: auto 20px;
 }
 
-.knob-inner {
-    width: 60px;
-    height: 60px;
-    background: radial-gradient(circle at 30% 30%, #555, #222);
-    border-radius: 50%;
-    border: 1px solid #111;
-    position: relative;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+.span-btn:hover {
+    background: radial-gradient(circle at 30% 30%, #666, #444);
+    color: #fff;
+    transform: scale(1.05);
 }
 
-.knob-inner::after {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    background: #4c9;
-    /* LED Indicator */
-    border-radius: 50%;
-    box-shadow: 0 0 5px #4c9;
+.span-btn:active {
+    background: #222;
+    transform: scale(0.95);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Numpad Clean up */
@@ -710,3 +715,4 @@ h2 {
         color: #555;
         text-transform: none;
     }
+}
