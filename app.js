@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         SPAN: [
             { label: 'SPAN', action: () => setParam('SPAN') },
-            { label: 'FULL', action: () => { Receiver.freq.span = 1000; updateFreqs(); } },
+            { label: 'FULL', action: () => { Receiver.freq.span = 7000; updateFreqs(); } },
             { label: 'ZERO', action: () => { Receiver.freq.span = 0; updateFreqs(); } }
         ]
     };
@@ -289,7 +289,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ant-select').addEventListener('change', () => {
         const f = parseFloat(document.getElementById('freq').value);
         const type = document.getElementById('ant-select').value;
-        if (f && type !== 'custom') document.getElementById('af').value = antennaData[type](f).toFixed(1);
+        const afInput = document.getElementById('af');
+
+        if (type === 'upa') {
+            if (f < 300 || f > 1000) {
+                afInput.value = ''; // Clear or handle invalid
+                // Maybe a small UI indication? For now, just don't calculate AF
+                writeFooter('Warning: Teseq UPA 6108 range is 300 MHz - 1 GHz');
+                return;
+            }
+        }
+
+        if (f && type !== 'custom') {
+            afInput.value = antennaData[type](f).toFixed(1);
+            writeFooter(''); // Clear warning if valid
+        }
     });
 
     // Inputs listener to redraw
@@ -315,6 +329,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper to calc start/stop from center/span
     function recalcFreqRange() {
         Receiver.freq.start = Receiver.freq.center - Receiver.freq.span / 2;
+        if (Receiver.freq.start < 0) {
+            // Shift Center so Start is 0
+            Receiver.freq.start = 0;
+            Receiver.freq.center = Receiver.freq.span / 2;
+        }
         Receiver.freq.stop = Receiver.freq.center + Receiver.freq.span / 2;
     }
 
@@ -322,6 +341,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleGo(scale = 1) {
         if (!Receiver.inputBuffer) return;
         const v = parseFloat(Receiver.inputBuffer) * scale;
+
+        if (isNaN(v)) {
+            // Error handling
+            writeFooter('Error: Invalid Input');
+            Receiver.inputBuffer = '';
+            setTimeout(() => writeFooter('System Ready.'), 1500);
+            return;
+        }
+
         if (Receiver.activeParam === 'CENTER') {
             Receiver.freq.center = v;
             recalcFreqRange();
@@ -350,7 +378,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSpanDown) {
         btnSpanDown.addEventListener('click', () => {
+            // sticky zero logic
+            const wasStartZero = Receiver.freq.start <= 0.1;
+
             Receiver.freq.span = Math.max(0.001, Receiver.freq.span / 2); // Prevent 0 or negative
+
+            if (wasStartZero) {
+                Receiver.freq.center = Receiver.freq.span / 2;
+            }
+
             updateFreqs(); // Update internal min/max
             recalcFreqRange();
             drawScreen();
@@ -360,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSpanUp) {
         btnSpanUp.addEventListener('click', () => {
-            Receiver.freq.span = Math.min(1000, Receiver.freq.span * 2); // Cap at 1000 MHz
+            Receiver.freq.span = Math.min(7000, Receiver.freq.span * 2); // Cap at 7000 MHz
             updateFreqs(); // Update internal min/max
             recalcFreqRange();
             drawScreen();
