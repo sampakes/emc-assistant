@@ -224,6 +224,7 @@ h2 {
 
 .esci-display-area {
     display: flex;
+    justify-content: center;
     gap: 15px;
     background: #111;
     padding: 15px;
@@ -726,4 +727,120 @@ h2 {
         color: #555;
         text-transform: none;
     }
+}
+
+/* Tabs & Data Table Styles */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+}
+
+.tab-btn:hover {
+    color: var(--primary);
+    background-color: rgba(0, 82, 204, 0.05);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.rotation-toggles {
+    display: inline-flex;
+    gap: 5px;
+    margin-bottom: 15px;
+    margin-top: 5px;
+    background: var(--border-color);
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.rot-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.rot-btn:hover {
+    color: var(--text-main);
+}
+
+.rot-btn.active {
+    background: var(--card-bg);
+    color: var(--text-main);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 10px 8px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.data-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.data-table input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: #fafafa;
+}
+
+.data-table input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.2);
+}
+
+.t-final {
+    font-weight: 600;
+}
+
+.t-margin {
+    font-weight: bold;
 }

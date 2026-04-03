@@ -40,263 +40,200 @@
                     </div>
                 </div>
 
-                <!-- Softkeys -->
-                <div class="softkeys-container">
-                    <button class="softkey" id="sk-1"></button>
-                    <button class="softkey" id="sk-2"></button>
-                    <button class="softkey" id="sk-3"></button>
-                    <button class="softkey" id="sk-4"></button>
-                    <button class="softkey" id="sk-5"></button>
-                    <button class="softkey" id="sk-6"></button>
-                </div>
-            </div>
-
-            <!-- Controls -->
-            <div class="esci-control-panel">
-                <!-- Measurement Block -->
-                <div class="control-group meas-keys">
-                    <div class="group-label">MEASUREMENT</div>
-                    <div class="key-row">
-                        <button class="hardkey" id="key-freq">FREQ</button>
-                        <button class="hardkey" id="key-span">SPAN</button>
-                        <button class="hardkey" id="key-ampt">AMPT</button>
-                    </div>
-                    <div class="key-row">
-                        <button class="hardkey" id="key-bw">BW</button>
-                        <button class="hardkey" id="key-trace">TRACE</button>
-                    </div>
-                </div>
-
-                <!-- Marker & Search -->
-                <div class="control-group">
-                    <div class="group-label">MARKER</div>
-                    <div class="key-row">
-                        <button class="hardkey" id="key-mkr">MKR</button>
-                        <button class="hardkey" id="key-mkr-fctn">MKR-></button>
-                    </div>
-                    <div class="key-row">
-                        <button class="hardkey" id="key-peak">PEAK</button>
-                        <button class="hardkey" id="key-search">SEARCH</button>
-                    </div>
-                </div>
-
-                <!-- System -->
-                <div class="control-group">
-                    <div class="group-label">SYSTEM</div>
-                    <div class="key-row">
-                        <button class="hardkey" id="key-setup">SETUP</button>
-                        <button class="hardkey" id="key-print">PRINT</button>
-                    </div>
-                    <div class="key-row">
-                        <button class="hardkey danger-btn" id="key-preset">RESET</button>
-                    </div>
-                </div>
-
-                <!-- Span Controls -->
-                <div class="span-controls">
-                    <div class="group-label">SPAN CONTROL</div>
-                    <div class="span-btn-row">
-                        <button class="span-btn" id="btn-span-down">◄</button>
-                        <button class="span-btn" id="btn-span-up">►</button>
-                    </div>
-                </div>
-
-                <!-- Numeric Keypad -->
-                <div class="control-group">
-                    <div class="group-label">ENTRY</div>
-                    <div class="numpad-grid">
-                        <button class="numkey">7</button><button class="numkey">8</button><button
-                            class="numkey">9</button>
-                        <button class="unitkey">GHz</button>
-                        <button class="numkey">4</button><button class="numkey">5</button><button
-                            class="numkey">6</button>
-                        <button class="unitkey">MHz</button>
-                        <button class="numkey">1</button><button class="numkey">2</button><button
-                            class="numkey">3</button>
-                        <button class="unitkey">kHz</button>
-                        <button class="numkey">0</button><button class="numkey">.</button><button
-                            class="numkey">⌫</button>
-                        <button class="unitkey">Hz</button>
-                        <!-- GO Button -->
-                        <button class="hardkey large" id="key-go"
-                            style="grid-column: span 4; background:#4c9; margin-top:4px;">GO / ENTER</button>
-                    </div>
-                </div>
+                <!-- Softkeys and Control Panel removed per user request -->
             </div>
         </div>
 
 
-        <!-- Calculator Bounds: Merged Config -->
+        <!-- 16-Point Multi-Measurement Data Collection -->
         <div class="card">
-            <h2><span class="icon">🧮</span> Simulation & Calculator</h2>
-
-            <div class="calculator-grid">
-                <div class="inputs">
-                    <!-- Source Mode Selector (Moved Here) -->
-                    <div class="input-group"
-                        style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
-                        <label>Emission Mode</label>
-                        <div class="toggle-group">
-                            <input type="radio" id="mode-clock" name="source-mode" value="clock" checked>
-                            <label for="mode-clock" class="toggle-btn" style="flex:1; text-align:center;">Clock</label>
-
-                            <input type="radio" id="mode-smps" name="source-mode" value="smps">
-                            <label for="mode-smps" class="toggle-btn" style="flex:1; text-align:center;">SMPS</label>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <h2 style="margin: 0;"><span class="icon">📊</span> Multi-Measurement Data Collection</h2>
+                        <div style="display: flex; gap: 5px; align-items: center; background: var(--surface); padding: 5px; border-radius: 6px; border: 1px solid var(--border);">
+                            <label style="margin:0; font-size: 0.8rem; padding-left: 5px;">Device:</label>
+                            <select id="device-selector" style="background: var(--bg); border: 1px solid var(--border); padding: 4px; font-size: 0.85rem; font-weight: 600; min-width: 150px; border-radius: 4px;">
+                                <!-- Options will be generated dynamically -->
+                            </select>
+                            <button id="add-device-btn" style="background: var(--primary); color: #000; border:none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size:1rem; font-weight:bold;">+</button>
+                            <button id="del-device-btn" style="background: var(--danger); color: #fff; border:none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size:0.8rem; font-weight:bold;">🗑</button>
                         </div>
                     </div>
-
-                    <!-- Frequency -->
-                    <div class="input-group">
-                        <label>Frequency (MHz)</label>
-                        <input type="number" id="freq" placeholder="Fund Ctr" value="100">
-                    </div>
-
-                    <!-- Voltage -->
-                    <div class="input-group" style="margin-top:10px;">
-                        <label>Receiver Reading (dBµV)</label>
-                        <input type="number" id="voltage" placeholder="Reading" value="60">
-                    </div>
-
-                    <!-- Antenna Factor -->
-                    <div class="input-group" style="margin-top:10px;">
-                        <label>Antenna Factor (dB/m)</label>
-                        <select id="ant-select" style="margin-bottom: 5px;">
-                            <option value="upa">Teseq UPA 6108</option>
-                            <option value="bicon">Generic Biconicon</option>
-                            <option value="horn">Generic Horn</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                        <input type="number" id="af" placeholder="AF" value="18">
-                    </div>
-
-                    <!-- Cable Loss -->
-                    <div class="input-group" style="margin-top:10px;">
-                        <label>Cable Loss (dB)</label>
-                        <input type="number" id="cable" placeholder="Loss" value="1.5">
-                    </div>
-
-                    <!-- Realism Toggles (Compact) -->
-                    <div class="input-group" style="margin-top:15px; border-top: 1px solid #333; padding-top: 10px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="margin:0;">Jitter</label>
-                            <input type="checkbox" id="toggle-jitter" checked>
-                        </div>
-                        <div style="margin-top:5px;">
-                            <label style="font-size:0.8rem;">Filter Strength</label>
-                            <input type="range" id="filter-slider" min="0" max="100" value="10" style="width:100%;">
-                        </div>
-                        <!-- Hidden/Fixed values for Noise/Realism to simplify UI -->
-                        <input type="hidden" id="realism-slider" value="80">
-                        <input type="hidden" id="noise-slider" value="20">
-                    </div>
-
-                    <button class="primary-btn" id="calc-btn" style="margin-top: 20px;">Calculate & Update Sim</button>
-                </div>
-
-                <div class="results-area">
-                    <div class="result-row">
-                        <span>Field Strength:</span>
-                        <strong id="total-field">--</strong>
-                    </div>
-                    <div class="result-row">
-                        <span>Limit Line:</span>
-                        <strong id="limit-val">--</strong>
-                    </div>
-                    <div class="result-row margin-row" id="result-box">
-                        <span>Margin:</span>
-                        <strong id="margin-val">--</strong>
-                    </div>
-
-                    <!-- Distance & Class moved to Result Side to save vertical space -->
-                    <div style="margin-top:20px; border-top:1px solid #444; padding-top:10px;">
+                    <div style="display: flex; gap: 15px;">
                         <div class="input-group">
                             <label>Meas. Distance</label>
-                            <select id="dist">
+                            <select id="dist" style="padding: 6px 12px; font-size: 0.85rem;">
                                 <option value="3" selected>3 Meters</option>
                                 <option value="10">10 Meters</option>
                             </select>
                         </div>
-                        <div class="input-group" style="margin-top:5px;">
+                        <div class="input-group">
                             <label>Limit Class</label>
-                            <select id="class">
+                            <select id="class" style="padding: 6px 12px; font-size: 0.85rem;">
                                 <option value="B" selected>Class B (Res)</option>
                                 <option value="A">Class A (Ind)</option>
                             </select>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Calculation Proof Section -->
-            <div class="proof-section">
-                <button class="toggle-proof-btn" id="toggle-proof">Show/Hide Manual Calculation Proof</button>
-
-                <div id="proof-content" class="proof-content hidden">
-                    <h3>Step-by-Step Verification</h3>
-                    <p style="margin-bottom: 20px; color: #666; font-size: 0.9rem;">
-                        Compliance requires the total Field Strength be below the Limit Line.
-                        <br>Formula: Field Strength = Reading + Antenna Factor + Cable Loss
-                    </p>
-
-                    <!-- Step 1: Voltage -->
-                    <div class="proof-step">
-                        <div class="step-header">
-                            <div class="step-num">1</div>
-                            <h4>Receiver Reading (Volts)</h4>
-                            <div class="step-math" id="math-voltage">Input: <strong>--</strong></div>
-                            <button class="bio-toggle" data-target="bio-volt">?</button>
-                        </div>
-                        <div class="bio-content hidden" id="bio-volt">
-                            <strong>What is this?</strong> The raw voltage level measured at the receiver's RF input
-                            port.
-                            It is typically expressed in dBµV.
-                        </div>
-                    </div>
-
-                    <!-- Step 2: Antenna Factor -->
-                    <div class="proof-step">
-                        <div class="step-header">
-                            <div class="step-num">2</div>
-                            <h4>Antenna Factor (dB/m)</h4>
-                            <div class="step-math" id="math-af">Add: <strong>--</strong></div>
-                            <button class="bio-toggle" data-target="bio-af">?</button>
-                        </div>
-                        <div class="bio-content hidden" id="bio-af">
-                            <strong>What is this?</strong> The conversion factor that relates the voltage at the antenna
-                            terminals to the actual electric field strength.
-                        </div>
-                    </div>
-
-                    <!-- Step 3: Cable Loss -->
-                    <div class="proof-step">
-                        <div class="step-header">
-                            <div class="step-num">3</div>
-                            <h4>Cable Attenuation (Loss)</h4>
-                            <div class="step-math" id="math-cable">Add: <strong>--</strong></div>
-                            <button class="bio-toggle" data-target="bio-cable">?</button>
-                        </div>
-                        <div class="bio-content hidden" id="bio-cable">
-                            <strong>What is this?</strong> Signal power lost as it travels through the coaxial cable.
-                        </div>
-                    </div>
-
-                    <!-- Step 4: Total -->
-                    <div class="proof-step" style="border-bottom: 2px solid var(--primary);">
-                        <div class="step-header">
-                            <div class="step-num">4</div>
-                            <h4>Total Field Strength</h4>
-                            <div class="step-math large-math" id="math-total"><strong>= --</strong></div>
-                        </div>
-                        <div class="step-explanation">
-                            Compare this value to the Limit Line to determine Pass/Fail.
-                        </div>
-                    </div>
-
+                
+                <div style="display: flex; gap: 20px; align-items: stretch; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: var(--surface);">
+                     <div style="display: flex; flex-direction: column; justify-content: center;">
+                         <label style="font-size: 0.75rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase;">Plot Mode</label>
+                         <div class="toggle-group" style="width: auto;">
+                             <input type="radio" id="plot-active" name="plot-mode" value="active" checked>
+                             <label for="plot-active" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Active Tab (Band)</label>
+                             <input type="radio" id="plot-active-full" name="plot-mode" value="active-full">
+                             <label for="plot-active-full" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Active Tab (Full 30-1G)</label>
+                             <input type="radio" id="plot-all" name="plot-mode" value="all">
+                             <label for="plot-all" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Overlay All 16 (Full)</label>
+                         </div>
+                     </div>
+                     <div style="border-left: 1px solid var(--border); padding-left: 15px; display: flex; flex-direction: column; justify-content: center;">
+                         <label style="font-size: 0.75rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase;">Trace Legend</label>
+                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; font-size: 0.8rem; font-weight: 600;">
+                             <span style="color: #00ffff;">■ Dir ↕</span>
+                             <span style="color: #ff00ff;">■ Dir ↔</span>
+                             <span style="color: #00ff00;">■ Bic ↕</span>
+                             <span style="color: #ffaa00;">■ Bic ↔</span>
+                         </div>
+                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Procedure Checklist -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="dir-v">Directional ↕</button>
+                <button class="tab-btn" data-tab="dir-h">Directional ↔</button>
+                <button class="tab-btn" data-tab="bic-v">Biconical ↕</button>
+                <button class="tab-btn" data-tab="bic-h">Biconical ↔</button>
+            </div>
+
+            <!-- Generate the 4 Tab Contents (we will use a JS loop to populate rows to save space, or just write them out) -->
+            <!-- Writing them out makes it clear and easy to read without complex JS rendering -->
+            
+            <div id="dir-v" class="tab-content active">
+                <div class="rotation-toggles">
+                    <button class="rot-btn active" data-rot="0">0°</button>
+                    <button class="rot-btn" data-rot="90">90°</button>
+                    <button class="rot-btn" data-rot="180">180°</button>
+                    <button class="rot-btn" data-rot="270">270°</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Peak</th><th>Freq (MHz)</th><th>Reading (dBµV)</th><th>AF (dB/m)</th><th>Loss (dB)</th><th>Final (dBµV/m)</th><th>Margin (dB)</th></tr></thead>
+                    <tbody id="tbody-dir-v">
+                        <tr data-rot="0"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="dir-h" class="tab-content">
+                <div class="rotation-toggles">
+                    <button class="rot-btn active" data-rot="0">0°</button>
+                    <button class="rot-btn" data-rot="90">90°</button>
+                    <button class="rot-btn" data-rot="180">180°</button>
+                    <button class="rot-btn" data-rot="270">270°</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Peak</th><th>Freq (MHz)</th><th>Reading (dBµV)</th><th>AF (dB/m)</th><th>Loss (dB)</th><th>Final (dBµV/m)</th><th>Margin (dB)</th></tr></thead>
+                    <tbody id="tbody-dir-h">
+                        <tr data-rot="0"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="bic-v" class="tab-content">
+                <div class="rotation-toggles">
+                    <button class="rot-btn active" data-rot="0">0°</button>
+                    <button class="rot-btn" data-rot="90">90°</button>
+                    <button class="rot-btn" data-rot="180">180°</button>
+                    <button class="rot-btn" data-rot="270">270°</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Peak</th><th>Freq (MHz)</th><th>Reading (dBµV)</th><th>AF (dB/m)</th><th>Loss (dB)</th><th>Final (dBµV/m)</th><th>Margin (dB)</th></tr></thead>
+                    <tbody id="tbody-bic-v">
+                        <tr data-rot="0"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="bic-h" class="tab-content">
+                <div class="rotation-toggles">
+                    <button class="rot-btn active" data-rot="0">0°</button>
+                    <button class="rot-btn" data-rot="90">90°</button>
+                    <button class="rot-btn" data-rot="180">180°</button>
+                    <button class="rot-btn" data-rot="270">270°</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Peak</th><th>Freq (MHz)</th><th>Reading (dBµV)</th><th>AF (dB/m)</th><th>Loss (dB)</th><th>Final (dBµV/m)</th><th>Margin (dB)</th></tr></thead>
+                    <tbody id="tbody-bic-h">
+                        <tr data-rot="0"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="primary-btn" id="calc-table-btn" style="margin-top: 20px;">Calculate & Update Sim</button>
+        </div>
         <div class="card">
             <h2><span class="icon">📝</span> Measurement Procedure</h2>
             <div class="progress-bar">

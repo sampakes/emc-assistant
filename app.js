@@ -32,97 +32,232 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Menu / Keys (Simplified) ---
-    // Retaining basic menu logic for completeness, though specific request focused on calc.
-    const Menus = {
-        FREQ: [
-            { label: 'CENTER', action: () => setParam('CENTER') },
-            { label: 'SPAN', action: () => setParam('SPAN') },
-            { label: '', action: null }
-        ],
-        SPAN: [
-            { label: 'SPAN', action: () => setParam('SPAN') },
-            { label: 'FULL', action: () => { Receiver.freq.span = 7000; updateFreqs(); } },
-            { label: 'ZERO', action: () => { Receiver.freq.span = 0; updateFreqs(); } }
-        ]
+    function writeFooter(msg) { document.getElementById('footer-msg').textContent = msg; }
+    // Legacy softkey and hardkey functions removed
+
+    // --- Device State Manager (LocalStorage) ---
+    let appData = JSON.parse(localStorage.getItem('emcData')) || {
+        devices: ['STM32 Demo Board', 'DMU11'],
+        currentDevice: 'STM32 Demo Board',
+        deviceStates: {}
     };
 
-    function setParam(p) { Receiver.activeParam = p; writeFooter(`${p}: Enter Value...`); }
-    function writeFooter(msg) { document.getElementById('footer-msg').textContent = msg; }
-    function updateFreqs() { Receiver.updateDisplay(); }
-
-    // --- Calculator Logic (The Core) ---
-    const calcBtn = document.getElementById('calc-btn');
-
-    function performCalculation(updateReceiver = true) {
-        const freqVal = parseFloat(document.getElementById('freq').value);
-        const voltVal = parseFloat(document.getElementById('voltage').value) || 0;
-        const afVal = parseFloat(document.getElementById('af').value) || 0;
-        const cabVal = parseFloat(document.getElementById('cable').value) || 0;
-        const distVal = parseInt(document.getElementById('dist').value);
-        const clsVal = document.getElementById('class').value;
-
-        if (isNaN(freqVal) || freqVal <= 0) return;
-
-        // 1. Calculate Field Strength (E = V + AF + Loss)
-        const totalE = voltVal + afVal + cabVal;
-
-        // 2. Determine Limit
-        const limit = getLimit(freqVal, distVal, clsVal);
-
-        // 3. Margin
-        const margin = limit - totalE;
-
-        // 4. Update UI
-        document.getElementById('total-field').textContent = `${totalE.toFixed(2)} dBµV/m`;
-        document.getElementById('limit-val').textContent = `${limit.toFixed(2)} dBµV/m`;
-        const mEl = document.getElementById('margin-val');
-        mEl.textContent = `${margin.toFixed(2)} dB`;
-
-        // Colorize
-        const box = document.getElementById('result-box');
-        mEl.className = margin >= 0 ? 'pass' : 'fail';
-        mEl.style.color = margin >= 6 ? '#4c9' : (margin >= 0 ? 'var(--warning)' : 'var(--danger)');
-        box.style.borderLeft = margin >= 0 ? "5px solid var(--success)" : "5px solid var(--danger)";
-
-        // 5. Update Proof Section
-        document.getElementById('math-voltage').innerHTML = `Input: <strong>${voltVal.toFixed(1)} dBµV</strong>`;
-        document.getElementById('math-af').innerHTML = `Add: <strong>${afVal.toFixed(1)} dB/m</strong>`;
-        document.getElementById('math-cable').innerHTML = `Add: <strong>${cabVal.toFixed(1)} dB</strong>`;
-        document.getElementById('math-total').innerHTML = `<strong>= ${totalE.toFixed(2)} dBµV/m</strong>`;
-
-        // 6. Update Simulation State
-        // Store the EXACT calculated level to be used as the Fundamental Amplitude
-        Receiver.simulatedLevel = totalE;
-
-        if (updateReceiver) {
-            Receiver.freq.center = freqVal;
-            // Auto Span: keep it reasonable e.g. 500MHz or 200MHz
-            if (Receiver.freq.span < 50) Receiver.freq.span = 100;
-
-            // Update range
-            Receiver.freq.start = Receiver.freq.center - Receiver.freq.span / 2;
-            Receiver.freq.stop = Receiver.freq.center + Receiver.freq.span / 2;
-
-            // Marker on peak
-            Receiver.marker.active = true;
-            Receiver.marker.freq = freqVal;
-            Receiver.marker.level = totalE;
-
-            Receiver.updateDisplay();
+    function initDeviceManager() {
+        const selector = document.getElementById('device-selector');
+        
+        function renderOptions() {
+            selector.innerHTML = '';
+            appData.devices.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                selector.appendChild(opt);
+            });
+            selector.value = appData.currentDevice;
         }
+
+        if (selector) renderOptions();
+
+        if (selector) selector.addEventListener('change', () => {
+            saveDeviceState();
+            appData.currentDevice = selector.value;
+            localStorage.setItem('emcData', JSON.stringify(appData));
+            loadDeviceState();
+            calculateTable();
+        });
+
+        const addBtn = document.getElementById('add-device-btn');
+        if (addBtn) addBtn.addEventListener('click', () => {
+            const newName = prompt('Enter new device name:');
+            if (newName && newName.trim() !== '') {
+                if (!appData.devices.includes(newName)) {
+                    saveDeviceState(); // save current before switching
+                    appData.devices.push(newName);
+                    appData.currentDevice = newName;
+                    renderOptions();
+                    loadDeviceState(); // loads empty for new
+                    calculateTable();
+                    localStorage.setItem('emcData', JSON.stringify(appData));
+                } else {
+                    alert('Device already exists.');
+                }
+            }
+        });
+
+        const delBtn = document.getElementById('del-device-btn');
+        if (delBtn) delBtn.addEventListener('click', () => {
+            if (appData.devices.length <= 1) return alert('Cannot delete the last device.');
+            if (confirm(`Are you sure you want to delete ${appData.currentDevice} and all its data?`)) {
+                appData.devices = appData.devices.filter(d => d !== appData.currentDevice);
+                delete appData.deviceStates[appData.currentDevice];
+                appData.currentDevice = appData.devices[0];
+                renderOptions();
+                loadDeviceState();
+                calculateTable();
+                localStorage.setItem('emcData', JSON.stringify(appData));
+            }
+        });
+
+        // Auto-save on any input change
+        document.querySelectorAll('.data-table input').forEach(inp => {
+            inp.addEventListener('change', () => saveDeviceState());
+        });
     }
 
-    if (calcBtn) calcBtn.addEventListener('click', () => performCalculation(true));
+    function saveDeviceState() {
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        let state = [];
+        rows.forEach(row => {
+            state.push({
+                f: row.querySelector('.t-freq').value,
+                r: row.querySelector('.t-read').value,
+                a: row.querySelector('.t-af').value,
+                l: row.querySelector('.t-loss').value
+            });
+        });
+        
+        // Save distance and class specifically for device?
+        // Let's just save the table data for now as per user request.
+        appData.deviceStates[appData.currentDevice] = state;
+        localStorage.setItem('emcData', JSON.stringify(appData));
+    }
+
+    function loadDeviceState() {
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        const state = appData.deviceStates[appData.currentDevice];
+        
+        rows.forEach((row, i) => {
+            row.querySelector('.t-freq').value = state && state[i] ? state[i].f : '';
+            row.querySelector('.t-read').value = state && state[i] ? state[i].r : '';
+            row.querySelector('.t-af').value = state && state[i] ? state[i].a : '';
+            row.querySelector('.t-loss').value = state && state[i] && state[i].l !== '' ? state[i].l : '1.5';
+            
+            row.querySelector('.t-final').textContent = '--';
+            row.querySelector('.t-margin').textContent = '--';
+            row.querySelector('.t-margin').style.color = '';
+        });
+    }
+
+    // --- Legacy Calculator logic removed ---
+    let tableSignals = [];
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+            drawScreen();
+        });
+    });
+
+    document.querySelectorAll('.rot-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabContent = this.closest('.tab-content');
+            tabContent.querySelectorAll('.rot-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const selectedRot = this.dataset.rot;
+            tabContent.querySelectorAll('.data-table tbody tr').forEach(row => {
+                if (row.dataset.rot === selectedRot) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            drawScreen();
+        });
+    });
+
+    function calculateTable() {
+        const distVal = parseInt(document.getElementById('dist').value) || 3;
+        const clsVal = document.getElementById('class').value || 'B';
+        tableSignals = [];
+
+        document.querySelectorAll('.data-table tbody tr').forEach(row => {
+            const fInput = row.querySelector('.t-freq');
+            const rInput = row.querySelector('.t-read');
+            const aInput = row.querySelector('.t-af');
+            const lInput = row.querySelector('.t-loss');
+            
+            const f = parseFloat(fInput.value);
+            const read = parseFloat(rInput.value);
+            const af = parseFloat(aInput.value) || 0;
+            const loss = parseFloat(lInput.value) || 0;
+
+            if (!isNaN(f) && !isNaN(read)) {
+                const total = read + af + loss;
+                const limit = getLimit(f, distVal, clsVal);
+                const margin = limit - total;
+
+                const finalEl = row.querySelector('.t-final');
+                const marginEl = row.querySelector('.t-margin');
+
+                finalEl.textContent = total.toFixed(2);
+                marginEl.textContent = margin.toFixed(2);
+
+                if (margin >= 0) {
+                    marginEl.style.color = margin >= 6 ? 'var(--success)' : 'var(--warning)';
+                } else {
+                    marginEl.style.color = 'var(--danger)';
+                }
+
+                const tabId = row.closest('.tab-content').id;
+                const rotId = row.dataset.rot;
+                tableSignals.push({ f: f, l: total, tab: tabId, rot: rotId });
+            }
+        });
+
+        // Ensure calculation saves current state
+        if (typeof saveDeviceState === 'function') saveDeviceState();
+
+        // Auto-scale to fit the new points
+        autoSpanTable();
+    }
+
+    function autoSpanTable() {
+        const plotModeEl = document.querySelector('input[name="plot-mode"]:checked');
+        const plotMode = plotModeEl ? plotModeEl.value : 'active';
+        const activeTabEl = document.querySelector('.tab-btn.active');
+        const activeTab = activeTabEl ? activeTabEl.dataset.tab : '';
+
+        let nStart, nStop;
+
+        if (plotMode === 'all' || plotMode === 'active-full') {
+            nStart = 30;
+            nStop = 1000;
+        } else {
+            // plotMode === 'active'
+            if (activeTab.startsWith('bic')) {
+                nStart = 30;
+                nStop = 300;
+            } else if (activeTab.startsWith('dir')) {
+                nStart = 300;
+                nStop = 1000;
+            } else {
+                nStart = 30;
+                nStop = 1000;
+            }
+        }
+
+        let nSpan = nStop - nStart;
+        let nCenter = (nStop + nStart) / 2;
+
+        Receiver.freq.center = nCenter;
+        Receiver.freq.span = nSpan;
+        Receiver.freq.start = nStart;
+        Receiver.freq.stop = nStop;
+        
+        Receiver.updateDisplay(); // updateDisplay calls drawScreen()
+    }
+
+    const calcTableBtn = document.getElementById('calc-table-btn');
+    if (calcTableBtn) calcTableBtn.addEventListener('click', calculateTable);
+
+    document.querySelectorAll('input[name="plot-mode"]').forEach(r => r.addEventListener('change', drawScreen));
 
     // --- Drawing ---
     function drawScreen() {
-        // Read Inputs
-        const calcFreq = parseFloat(document.getElementById('freq').value) || 100;
-        const sourceMode = document.querySelector('input[name="source-mode"]:checked').value;
-        const useJitter = document.getElementById('toggle-jitter').checked;
-        const filterStr = parseInt(document.getElementById('filter-slider').value) / 100;
-
         // Canvas Setup
         const canvas = document.getElementById('esci-canvas');
         if (!canvas) return;
@@ -167,85 +302,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         ctx.stroke();
 
-        // Signal Generation
-        let signals = [];
+        const plotModeEl = document.querySelector('input[name="plot-mode"]:checked');
+        const plotMode = plotModeEl ? plotModeEl.value : 'active';
+        const activeTabEl = document.querySelector('.tab-btn.active');
+        const activeTab = activeTabEl ? activeTabEl.dataset.tab : '';
+        const activeTabContent = document.getElementById(activeTab);
+        const activeRotBtn = activeTabContent ? activeTabContent.querySelector('.rot-btn.active') : null;
+        const activeRot = activeRotBtn ? activeRotBtn.dataset.rot : '0';
+        
+        const colorMap = {
+            'dir-v': '#00ffff',
+            'dir-h': '#ff00ff',
+            'bic-v': '#00ff00',
+            'bic-h': '#ffaa00'
+        };
 
-        // Fundamental (The "One Main One")
-        // Always at calcFreq, Amplitude = Receiver.simulatedLevel
-        // Verify it is within view
-        // Note: We generate it even if out of view, the loop filters it.
+        const activeTabsArray = (plotMode === 'all') ? Object.keys(colorMap) : [activeTab];
 
-        if (sourceMode === 'clock') {
-            // Harmonics
-            const maxN = Math.floor(stopF / calcFreq);
-            for (let n = 1; n <= Math.max(15, maxN); n++) {
-                const f = calcFreq * n;
-
-                // Amplitude Logic
-                // n=1: EXACTLY Receiver.simulatedLevel
-                // n>1: Fast decay. 
-                let amp = 0;
-                if (n === 1) {
-                    amp = Receiver.simulatedLevel;
-                } else {
-                    // Decay: Start from fundamental, drop 40dB/dec
-                    // But ensure it looks like harmonics
-                    amp = Receiver.simulatedLevel - (40 * Math.log10(n));
-                }
-
-                // Jitter
-                if (useJitter && n > 1) amp += (Math.sin(n * 17) * 3);
-
-                // Filter
-                if (f > 300) amp -= (f - 300) * 0.05 * filterStr;
-
-                if (f >= startF - span * 0.1 && f <= stopF + span * 0.1 && amp > 0) {
-                    signals.push({ f, l: amp });
-                }
-            }
-
-        } else {
-            // SMPS: Dense, Messy
-            const step = Math.max(0.5, span / 300);
-            for (let f = Math.max(startF, 0.1); f <= stopF; f += step) {
-                // Envelope guided by simulatedLevel at fund, but decaying 1/f
-                let ref = Receiver.simulatedLevel; // if f were calcFreq
-                // Scale relative to calcFreq
-                // 20*log(f/f0) decay
-                let base = ref - 20 * Math.log10(f / calcFreq);
-                if (f < calcFreq) base = ref - 40; // suppression below switch freq
-
-                const hash = (Math.random() * 10);
-                const val = base + hash;
-                signals.push({ f: f, l: val });
-            }
-        }
-
-        // Draw Trace
-        ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 1.5; ctx.beginPath();
-        let firstPt = true;
+        // Draw general noise floor trace
+        ctx.strokeStyle = '#555522'; ctx.lineWidth = 1; ctx.beginPath();
         for (let ix = 0; ix <= graphW; ix++) {
-            const f = startF + (ix / graphW) * span;
-
-            // Noise Floor
-            let val = 5 + Math.random() * 3;
-            if (sourceMode === 'smps') val += 10;
-
-            // Peaks
-            // Simple max-hold scan
-            const rbwVis = Math.max(span / 150, 1.0);
-            for (let s of signals) {
-                const delta = Math.abs(f - s.f);
-                if (delta < rbwVis * 3) {
-                    const peak = (s.l - minL) * Math.exp(-0.5 * (delta / (rbwVis * 0.4)) ** 2);
-                    val = Math.max(val, peak);
-                }
-            }
-            const y = mapY(val);
-            if (firstPt) { ctx.moveTo(pad.l + ix, y); firstPt = false; }
-            else ctx.lineTo(pad.l + ix, y);
+             let y = mapY(5 + Math.random() * 3);
+             if(ix === 0) ctx.moveTo(pad.l + ix, y); else ctx.lineTo(pad.l + ix, y);
         }
         ctx.stroke();
+
+        // Draw color-coded peaks as stems and markers
+        for (let tab of activeTabsArray) {
+            ctx.strokeStyle = colorMap[tab];
+            ctx.fillStyle = colorMap[tab];
+            ctx.lineWidth = 1.5;
+            
+            for (let s of tableSignals) {
+                if (s.tab === tab) {
+                    let shouldDraw = false;
+                    if (plotMode === 'all') {
+                        shouldDraw = true;
+                    } else if (s.rot === activeRot) {
+                        shouldDraw = true;
+                    }
+
+                    if (shouldDraw) {
+                        let mx = mapX(s.f);
+                        let my = mapY(s.l);
+                        
+                        if (mx >= pad.l && mx <= pad.l + graphW) {
+                            // Stem from floor
+                            ctx.beginPath();
+                            ctx.moveTo(mx, mapY(8));
+                            ctx.lineTo(mx, my);
+                            ctx.stroke();
+                            
+                            // Dot
+                            ctx.beginPath();
+                            ctx.arc(mx, my, 4, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                }
+            }
+        }
 
         // Marker (Linked to Sim Level)
         if (Receiver.marker.active) {
@@ -279,177 +395,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return l;
     }
 
-    // Auto-AF
-    const antennaData = {
-        'upa': (f) => 10 + 20 * Math.log10(f / 200),
-        'bicon': (f) => 8 + 15 * Math.log10(f / 30),
-        'horn': (f) => 20 + 10 * Math.log10(f / 1000),
-        'custom': () => 0
-    };
-    document.getElementById('ant-select').addEventListener('change', () => {
-        const f = parseFloat(document.getElementById('freq').value);
-        const type = document.getElementById('ant-select').value;
-        const afInput = document.getElementById('af');
+    // Auto-AF configuration removed
 
-        if (type === 'upa') {
-            if (f < 300 || f > 1000) {
-                afInput.value = ''; // Clear or handle invalid
-                // Maybe a small UI indication? For now, just don't calculate AF
-                writeFooter('Warning: Teseq UPA 6108 range is 300 MHz - 1 GHz');
-                return;
-            }
-        }
-
-        if (f && type !== 'custom') {
-            afInput.value = antennaData[type](f).toFixed(1);
-            writeFooter(''); // Clear warning if valid
-        }
-    });
-
-    // Inputs listener to redraw
-    // We want real-time update if user types in freq? No, user said "Calculate & Update Sim".
-    // But we should probably redraw if they toggle mode.
-    document.querySelectorAll('input[name="source-mode"]').forEach(r => r.addEventListener('change', drawScreen));
-    document.getElementById('toggle-jitter').addEventListener('change', drawScreen);
-    document.getElementById('filter-slider').addEventListener('input', drawScreen);
-
-    // Hardkeys (Legacy)
-    document.getElementById('key-freq').addEventListener('click', () => setParam('CENTER'));
-    document.getElementById('key-span').addEventListener('click', () => setParam('SPAN'));
-
-    // Number Pad
-    document.querySelectorAll('.numkey').forEach(k => {
-        k.addEventListener('click', () => {
-            const v = k.textContent;
-            if (v === '⌫') Receiver.inputBuffer = Receiver.inputBuffer.slice(0, -1);
-            else Receiver.inputBuffer += v;
-            writeFooter(`Entry: ${Receiver.inputBuffer}`);
-        });
-    });
-    // Helper to calc start/stop from center/span
-    function recalcFreqRange() {
-        Receiver.freq.start = Receiver.freq.center - Receiver.freq.span / 2;
-        if (Receiver.freq.start < 0) {
-            // Shift Center so Start is 0
-            Receiver.freq.start = 0;
-            Receiver.freq.center = Receiver.freq.span / 2;
-        }
-        Receiver.freq.stop = Receiver.freq.center + Receiver.freq.span / 2;
-    }
-
-    // GO/Enter
-    function handleGo(scale = 1) {
-        if (!Receiver.inputBuffer) return;
-        const v = parseFloat(Receiver.inputBuffer) * scale;
-
-        if (isNaN(v)) {
-            // Error handling
-            writeFooter('Error: Invalid Input');
-            Receiver.inputBuffer = '';
-            setTimeout(() => writeFooter('System Ready.'), 1500);
-            return;
-        }
-
-        if (Receiver.activeParam === 'CENTER') {
-            Receiver.freq.center = v;
-            recalcFreqRange();
-        }
-        if (Receiver.activeParam === 'SPAN') {
-            Receiver.freq.span = v;
-            recalcFreqRange();
-            updateFreqs();
-        }
-        Receiver.inputBuffer = ''; Receiver.activeParam = null;
-        drawScreen();
-    }
-    document.querySelectorAll('.unitkey').forEach(k => {
-        k.addEventListener('click', () => {
-            let s = 1;
-            if (k.textContent === 'GHz') s = 1000;
-            if (k.textContent === 'kHz') s = 0.001;
-            handleGo(s);
-        });
-    });
-    document.getElementById('key-go').addEventListener('click', () => handleGo(1));
-
-    // Span Control Buttons (Left/Right)
-    const btnSpanDown = document.getElementById('btn-span-down');
-    const btnSpanUp = document.getElementById('btn-span-up');
-
-    if (btnSpanDown) {
-        btnSpanDown.addEventListener('click', () => {
-            // sticky zero logic
-            const wasStartZero = Receiver.freq.start <= 0.1;
-
-            Receiver.freq.span = Math.max(0.001, Receiver.freq.span / 2); // Prevent 0 or negative
-
-            if (wasStartZero) {
-                Receiver.freq.center = Receiver.freq.span / 2;
-            }
-
-            updateFreqs(); // Update internal min/max
-            recalcFreqRange();
-            drawScreen();
-            writeFooter(`Span: ${Receiver.freq.span.toFixed(2)} MHz`);
-        });
-    }
-
-    if (btnSpanUp) {
-        btnSpanUp.addEventListener('click', () => {
-            Receiver.freq.span = Math.min(7000, Receiver.freq.span * 2); // Cap at 7000 MHz
-            updateFreqs(); // Update internal min/max
-            recalcFreqRange();
-            drawScreen();
-            writeFooter(`Span: ${Receiver.freq.span.toFixed(2)} MHz`);
-        });
-    }
-
-    // PRESET (Reset) Button
-    document.getElementById('key-preset').addEventListener('click', () => {
-        // Reset Logic
-        Receiver.freq.center = 1000; // Standard for checking
-        Receiver.freq.span = 1000; // Full span
-        Receiver.freq.start = 0;
-        Receiver.freq.stop = 1000; // But wait, standard preset might be 100 center?
-        // Let's use 100MHz Center, 100MHz Span as per initial load
-        Receiver.freq.center = 100;
-        Receiver.freq.span = 100;
-        recalcFreqRange();
-
-        Receiver.marker.active = false;
-        Receiver.inputBuffer = '';
-        Receiver.activeParam = null;
-
-        // Reset Inputs in Calc too? User asked for "reset button for the interface"
-        // Let's just reset the RECEIVER state for now as that's the main "Breakable" part
-
-        updateFreqs();
-        drawScreen();
-        writeFooter('System Reset Complete.');
-    });
-
-    // Proof Section Toggles
-    const proofToggleBtn = document.getElementById('toggle-proof');
-    const proofContent = document.getElementById('proof-content');
-
-    if (proofToggleBtn && proofContent) {
-        proofToggleBtn.addEventListener('click', () => {
-            proofContent.classList.toggle('hidden');
-        });
-    }
-
-    // Bio Toggles (Question Marks)
-    document.querySelectorAll('.bio-toggle').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetId = btn.getAttribute('data-target');
-            const targetEl = document.getElementById(targetId);
-            if (targetEl) {
-                targetEl.classList.toggle('hidden');
-            }
-        });
-    });
+    // Keyboard interaction dependencies removed
 
     // Init
-    performCalculation(true);
+    initDeviceManager();
+    loadDeviceState();
+    calculateTable();
 
 });
