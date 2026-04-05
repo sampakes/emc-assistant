@@ -47,10 +47,10 @@
 
         <!-- 16-Point Multi-Measurement Data Collection -->
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                        <h2 style="margin: 0;"><span class="icon">📊</span> Multi-Measurement Data Collection</h2>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 20px;">
+                <div style="flex: 1; min-width: 300px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <h2 style="margin: 0; white-space: nowrap;"><span class="icon">📊</span> Multi-Measurement Data Collection</h2>
                         <div style="display: flex; gap: 5px; align-items: center; background: var(--surface); padding: 5px; border-radius: 6px; border: 1px solid var(--border);">
                             <label style="margin:0; font-size: 0.8rem; padding-left: 5px;">Device:</label>
                             <select id="device-selector" style="background: var(--bg); border: 1px solid var(--border); padding: 4px; font-size: 0.85rem; font-weight: 600; min-width: 150px; border-radius: 4px;">
@@ -78,16 +78,18 @@
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 20px; align-items: stretch; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: var(--surface);">
+                <div style="display: flex; gap: 20px; align-items: stretch; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: var(--surface); flex-wrap: wrap;">
                      <div style="display: flex; flex-direction: column; justify-content: center;">
                          <label style="font-size: 0.75rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase;">Plot Mode</label>
                          <div class="toggle-group" style="width: auto;">
                              <input type="radio" id="plot-active" name="plot-mode" value="active" checked>
-                             <label for="plot-active" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Active Tab (Band)</label>
+                             <label for="plot-active" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Current Band</label>
+                             
                              <input type="radio" id="plot-active-full" name="plot-mode" value="active-full">
-                             <label for="plot-active-full" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Active Tab (Full 30-1G)</label>
+                             <label for="plot-active-full" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Full Span</label>
+                             
                              <input type="radio" id="plot-all" name="plot-mode" value="all">
-                             <label for="plot-all" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Overlay All 16 (Full)</label>
+                             <label for="plot-all" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Overlay All</label>
                          </div>
                      </div>
                      <div style="border-left: 1px solid var(--border); padding-left: 15px; display: flex; flex-direction: column; justify-content: center;">
@@ -234,61 +236,53 @@
             
             <button class="primary-btn" id="calc-table-btn" style="margin-top: 20px;">Calculate & Update Sim</button>
         </div>
+
+        <!-- Antenna Factor Reference Graphs -->
         <div class="card">
-            <h2><span class="icon">📝</span> Measurement Procedure</h2>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
+            <h2><span class="icon">📡</span> Antenna Factor Reference (Datasheet)</h2>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 15px;">
+                AF values used in calculations are read from these typical antenna factor curves.
+                Move the sliders to check typical AF values at specific frequencies.
+            </p>
 
-            <div class="checklist-group">
-                <h3>1. Setup & Validation</h3>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="1">
-                    <span>Verify Ambient Noise (Receiver scan with Antenna disconnected / terminated)</span>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                
+                <!-- Biconical Option A Block -->
+                <div style="text-align: center; display: flex; flex-direction: column; width: 480px; max-width: 100%;">
+                    <h3 style="margin-bottom: 8px; color: var(--primary);">Biconical VBA 6106 (30–300 MHz)</h3>
+                    <div style="position: relative; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 15px;">
+                        <img src="./VBA 6106 Typical AF.png" alt="Biconical Antenna AF" style="width: 100%; display: block;" />
+                        <div id="bic-dot" style="position: absolute; width: 14px; height: 14px; background-color: #ff3333; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, 50%); left: 0%; bottom: 0%; display: none; box-shadow: 0 0 5px rgba(0,0,0,0.8); z-index: 10;">
+                            <div id="bic-dot-label" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; white-space: nowrap; border: 1px solid var(--border);">-- MHz</div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group" style="padding: 10px 15px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; text-align: left;">
+                        <input type="range" id="bic-slider" min="30" max="300" value="50" step="1" style="width: 100%; accent-color: #ff3333; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-family: monospace; font-size: 0.95rem;">
+                            <span>Freq: <strong id="bic-f-readout" style="color: #fff;">50</strong> MHz</span>
+                            <span>AF: <strong id="bic-af-readout" style="color: #ff3333;">--</strong> dB/m</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="2">
-                    <span>Connect Antenna (e.g., Teseq UPA 6108) to Receiver RF Input</span>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="3">
-                    <span>Check Setup Photos for cable routing (minimize loops)</span>
-                </div>
-            </div>
 
-            <div class="checklist-group">
-                <h3>2. Receiver Config (ESCI 7)</h3>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="4">
-                    <span>Set Frequency Range (Start/Stop) or Span (30-1000 MHz)</span>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="5">
-                    <span>Set RBW = 120 kHz (Standard for CISPR 30M-1G)</span>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="6">
-                    <span>Select Detector: Peak (fast scan) or Quasi-Peak (final)</span>
-                </div>
-            </div>
+                <!-- Directional Option A Block -->
+                <div style="text-align: center; display: flex; flex-direction: column; width: 480px; max-width: 100%;">
+                    <h3 style="margin-bottom: 8px; color: var(--primary);">Directional UPA 6108 (300–1000 MHz)</h3>
+                    <div style="position: relative; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 15px;">
+                        <img src="./UPA 6108 Typical AF .png" alt="Directional UPA 6108 AF" style="width: 100%; display: block;" />
+                        <div id="dir-dot" style="position: absolute; width: 14px; height: 14px; background-color: #b5b5b5; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, 50%); left: 0%; bottom: 0%; display: none; box-shadow: 0 0 5px rgba(0,0,0,0.8); z-index: 10;">
+                            <div id="dir-dot-label" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; white-space: nowrap; border: 1px solid var(--border);">-- MHz</div>
+                        </div>
+                    </div>
 
-            <div class="checklist-group">
-                <h3>3. Measurement & Maximization</h3>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="7">
-                    <span>Scan Height: Move antenna 1m to 4m (Max Hold)</span>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="8">
-                    <span>Rotate Turntable: 0 to 360 degrees (find max azimuth)</span>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="9">
-                    <span>Check Polarization: Test both Horizontal & Vertical</span>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" data-id="10">
-                    <span>Final: Perform QP Meas on worst-case frequencies</span>
+                    <div class="input-group" style="padding: 10px 15px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; text-align: left;">
+                        <input type="range" id="dir-slider" min="300" max="1000" value="300" step="1" style="width: 100%; accent-color: #b5b5b5; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-family: monospace; font-size: 0.95rem;">
+                            <span>Freq: <strong id="dir-f-readout" style="color: #fff;">300</strong> MHz</span>
+                            <span>AF: <strong id="dir-af-readout" style="color: #b5b5b5;">--</strong> dB/m</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -296,5 +290,4 @@
 
     <script src="app.js"></script>
 </body>
-
 </html>

@@ -35,11 +35,89 @@ document.addEventListener('DOMContentLoaded', () => {
     function writeFooter(msg) { document.getElementById('footer-msg').textContent = msg; }
     // Legacy softkey and hardkey functions removed
 
-    // --- Device State Manager (LocalStorage) ---
-    let appData = JSON.parse(localStorage.getItem('emcData')) || {
-        devices: ['STM32 Demo Board', 'DMU11'],
-        currentDevice: 'STM32 Demo Board',
-        deviceStates: {}
+    // --- Hardcoded Default Measurement Data ---
+    // Format per table body: array of 16 rows (4 peaks × 4 rotations)
+    // Each row: { f: freq, r: reading, a: AF (blank until datasheet), l: loss }
+    // Row order: 0° (×4), 90° (×4), 180° (×4), 270° (×4)
+    const DEFAULT_DATA = {
+        'STM32 Demo Board': {
+            'tbody-dir-h': [
+                // 0°
+                { f: '350',    r: '23.2',  a: '15',   l: '1.5' },
+                { f: '384',    r: '17.73', a: '15.5', l: '1.5' },
+                { f: '512',    r: '15.53', a: '19',   l: '1.5' },
+                { f: '576',    r: '16.55', a: '20',   l: '1.5' },
+                // 90°
+                { f: '350',    r: '22.91', a: '15',   l: '1.5' },
+                { f: '384.04', r: '17.13', a: '15.5', l: '1.5' },
+                { f: '450',    r: '15',    a: '17',   l: '1.5' },
+                { f: '576',    r: '17.63', a: '20',   l: '1.5' },
+                // 180°
+                { f: '350',    r: '16.34', a: '15',   l: '1.5' },
+                { f: '384',    r: '17.11', a: '15.5', l: '1.5' },
+                { f: '448',    r: '15.24', a: '17',   l: '1.5' },
+                { f: '512',    r: '14.59', a: '19',   l: '1.5' },
+                // 270°
+                { f: '350',    r: '14.9',  a: '15',   l: '1.5' },
+                { f: '383.96', r: '15.58', a: '15.5', l: '1.5' },
+                { f: '500',    r: '14.52', a: '19',   l: '1.5' },
+                { f: '512',    r: '16.7',  a: '19',   l: '1.5' },
+            ],
+            // 'tbody-dir-v': [ ... ],  // Will be added when user provides data
+            'tbody-bic-h': [
+                // 0°
+                { f: '50',     r: '24.33', a: '10',   l: '1.5' },
+                { f: '150',    r: '16.56', a: '13',   l: '1.5' },
+                { f: '200',    r: '16.21', a: '14',   l: '1.5' },
+                { f: '288',    r: '20.65', a: '17.5', l: '1.5' },
+                // 90°
+                { f: '50',     r: '25.22', a: '10',   l: '1.5' },
+                { f: '94.5',   r: '25.78', a: '9',    l: '1.5' },
+                { f: '144',    r: '18.61', a: '12',   l: '1.5' },
+                { f: '224',    r: '15.59', a: '14.5', l: '1.5' },
+                // 180°
+                { f: '50',     r: '26.29', a: '10',   l: '1.5' },
+                { f: '105',    r: '24.56', a: '10',   l: '1.5' },
+                { f: '150',    r: '17.86', a: '13',   l: '1.5' },
+                { f: '219.60', r: '18.45', a: '14.5', l: '1.5' },
+                // 270°
+                { f: '50',     r: '25.77', a: '10',   l: '1.5' },
+                { f: '94.52',  r: '27.95', a: '9',    l: '1.5' },
+                { f: '144',    r: '17.23', a: '12',   l: '1.5' },
+                { f: '250',    r: '17.74', a: '15.5', l: '1.5' },
+            ],
+            'tbody-bic-v': [
+                // 0° (Redo)
+                { f: '50',     r: '31.02', a: '10',   l: '1.5' },
+                { f: '106.72', r: '17.94', a: '10',   l: '1.5' },
+                { f: '144',    r: '16.21', a: '12',   l: '1.5' },
+                { f: '256',    r: '20.34', a: '16',   l: '1.5' },
+                // 90°
+                { f: '50',     r: '31.37', a: '10',   l: '1.5' },
+                { f: '94.48',  r: '20.04', a: '9',    l: '1.5' },
+                { f: '224',    r: '17.36', a: '14.5', l: '1.5' },
+                { f: '262.88', r: '19.48', a: '16',   l: '1.5' },
+                // 180°
+                { f: '50',     r: '30.01', a: '10',   l: '1.5' },
+                { f: '99.8',   r: '23.05', a: '9.5',  l: '1.5' },
+                { f: '199.92', r: '19.48', a: '14',   l: '1.5' },
+                { f: '288',    r: '21.16', a: '17.5', l: '1.5' },
+                // 270°
+                { f: '50',     r: '29.29', a: '10',   l: '1.5' },
+                { f: '99.76',  r: '22.49', a: '9.5',  l: '1.5' },
+                { f: '209.88', r: '18.87', a: '14.5', l: '1.5' },
+                { f: '288',    r: '20.12', a: '17.5', l: '1.5' },
+            ],
+        },
+        'DMU11': {
+            // Data will be added when user provides it
+        }
+    };
+
+    // --- Device State Manager (in-memory, no localStorage) ---
+    let appData = {
+        devices: Object.keys(DEFAULT_DATA),
+        currentDevice: Object.keys(DEFAULT_DATA)[0] || 'STM32 Demo Board',
     };
 
     function initDeviceManager() {
@@ -59,82 +137,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selector) renderOptions();
 
         if (selector) selector.addEventListener('change', () => {
-            saveDeviceState();
             appData.currentDevice = selector.value;
-            localStorage.setItem('emcData', JSON.stringify(appData));
             loadDeviceState();
             calculateTable();
         });
-
-        const addBtn = document.getElementById('add-device-btn');
-        if (addBtn) addBtn.addEventListener('click', () => {
-            const newName = prompt('Enter new device name:');
-            if (newName && newName.trim() !== '') {
-                if (!appData.devices.includes(newName)) {
-                    saveDeviceState(); // save current before switching
-                    appData.devices.push(newName);
-                    appData.currentDevice = newName;
-                    renderOptions();
-                    loadDeviceState(); // loads empty for new
-                    calculateTable();
-                    localStorage.setItem('emcData', JSON.stringify(appData));
-                } else {
-                    alert('Device already exists.');
-                }
-            }
-        });
-
-        const delBtn = document.getElementById('del-device-btn');
-        if (delBtn) delBtn.addEventListener('click', () => {
-            if (appData.devices.length <= 1) return alert('Cannot delete the last device.');
-            if (confirm(`Are you sure you want to delete ${appData.currentDevice} and all its data?`)) {
-                appData.devices = appData.devices.filter(d => d !== appData.currentDevice);
-                delete appData.deviceStates[appData.currentDevice];
-                appData.currentDevice = appData.devices[0];
-                renderOptions();
-                loadDeviceState();
-                calculateTable();
-                localStorage.setItem('emcData', JSON.stringify(appData));
-            }
-        });
-
-        // Auto-save on any input change
-        document.querySelectorAll('.data-table input').forEach(inp => {
-            inp.addEventListener('change', () => saveDeviceState());
-        });
-    }
-
-    function saveDeviceState() {
-        const rows = document.querySelectorAll('.data-table tbody tr');
-        let state = [];
-        rows.forEach(row => {
-            state.push({
-                f: row.querySelector('.t-freq').value,
-                r: row.querySelector('.t-read').value,
-                a: row.querySelector('.t-af').value,
-                l: row.querySelector('.t-loss').value
-            });
-        });
-        
-        // Save distance and class specifically for device?
-        // Let's just save the table data for now as per user request.
-        appData.deviceStates[appData.currentDevice] = state;
-        localStorage.setItem('emcData', JSON.stringify(appData));
     }
 
     function loadDeviceState() {
-        const rows = document.querySelectorAll('.data-table tbody tr');
-        const state = appData.deviceStates[appData.currentDevice];
-        
-        rows.forEach((row, i) => {
-            row.querySelector('.t-freq').value = state && state[i] ? state[i].f : '';
-            row.querySelector('.t-read').value = state && state[i] ? state[i].r : '';
-            row.querySelector('.t-af').value = state && state[i] ? state[i].a : '';
-            row.querySelector('.t-loss').value = state && state[i] && state[i].l !== '' ? state[i].l : '1.5';
-            
-            row.querySelector('.t-final').textContent = '--';
-            row.querySelector('.t-margin').textContent = '--';
-            row.querySelector('.t-margin').style.color = '';
+        const tbodies = ['tbody-dir-v', 'tbody-dir-h', 'tbody-bic-v', 'tbody-bic-h'];
+        const defaults = DEFAULT_DATA[appData.currentDevice] || {};
+
+        tbodies.forEach(tbId => {
+            const tbody = document.getElementById(tbId);
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr');
+            const source = defaults[tbId];
+
+            rows.forEach((row, i) => {
+                row.querySelector('.t-freq').value = source && source[i] ? source[i].f : '';
+                row.querySelector('.t-read').value = source && source[i] ? source[i].r : '';
+                row.querySelector('.t-af').value   = source && source[i] ? source[i].a : '';
+                row.querySelector('.t-loss').value  = source && source[i] && source[i].l !== '' ? source[i].l : '1.5';
+
+                row.querySelector('.t-final').textContent = '--';
+                row.querySelector('.t-margin').textContent = '--';
+                row.querySelector('.t-margin').style.color = '';
+            });
         });
     }
 
@@ -254,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const calcTableBtn = document.getElementById('calc-table-btn');
     if (calcTableBtn) calcTableBtn.addEventListener('click', calculateTable);
 
-    document.querySelectorAll('input[name="plot-mode"]').forEach(r => r.addEventListener('change', drawScreen));
+    document.querySelectorAll('input[name="plot-mode"]').forEach(r => r.addEventListener('change', calculateTable));
 
     // --- Drawing ---
     function drawScreen() {
@@ -272,14 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#181818'; ctx.fillRect(0, 0, w, h);
         ctx.fillStyle = '#000'; ctx.fillRect(pad.l, pad.t, graphW, graphH);
 
-        // Grid
-        ctx.strokeStyle = '#224422'; ctx.lineWidth = 1; ctx.beginPath();
-        for (let i = 0; i <= 10; i++) {
-            const x = pad.l + i * (graphW / 10); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b);
-            const y = pad.t + i * (graphH / 10); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y);
-        }
-        ctx.stroke();
-
         // Mappers
         const startF = Receiver.freq.start;
         const stopF = Receiver.freq.stop;
@@ -288,6 +308,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const minL = 0, maxL = 100;
         const mapY = (l) => pad.t + graphH - ((Math.min(maxL, Math.max(minL, l)) - minL) / (maxL - minL)) * graphH;
+
+        // Grid
+        ctx.strokeStyle = '#224422'; ctx.lineWidth = 1; ctx.beginPath();
+        ctx.fillStyle = '#66aa66'; ctx.font = '10px monospace';
+        for (let i = 0; i <= 10; i++) {
+            const x = pad.l + i * (graphW / 10); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b);
+            const y = pad.t + i * (graphH / 10); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y);
+            
+            // Labels
+            if (i % 2 === 0) {
+                const fVal = Math.round(startF + (i / 10) * span);
+                ctx.fillText(fVal, x - 10, h - 15);
+                const lVal = 100 - i * 10;
+                ctx.fillText(lVal, 10, y + 4);
+            }
+        }
+        ctx.stroke();
+
+        // Label Axes
+        ctx.fillStyle = '#aaa';
+        ctx.fillText('MHz', w - 35, h - 15);
+        ctx.fillText('dBµV', 5, 15);
 
         // Limit Line
         const dist = parseInt(document.getElementById('dist').value);
@@ -397,11 +439,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-AF configuration removed
 
-    // Keyboard interaction dependencies removed
+    // --- Interactive AF Graphs Overlay ---
+    function initAFSliders() {
+        const bicSlider = document.getElementById('bic-slider');
+        const dirSlider = document.getElementById('dir-slider');
 
-    // Init
-    initDeviceManager();
-    loadDeviceState();
-    calculateTable();
+        if (!bicSlider || !dirSlider) return;
+
+        // Data curves matching your datasheet references
+        const bicPoints = [
+            {x: 30, y: 18}, {x: 40, y: 14}, {x: 50, y: 10}, {x: 70, y: 5.5}, 
+            {x: 94.5, y: 9}, {x: 105, y: 10}, {x: 144, y: 12}, {x: 150, y: 13}, 
+            {x: 200, y: 14}, {x: 224, y: 14.5}, {x: 250, y: 15.5}, {x: 288, y: 17.5}, {x: 300, y: 18.5}
+        ];
+        const dirPoints = [
+            {x: 300, y: 15.7}, {x: 400, y: 15}, {x: 450, y: 17}, {x: 500, y: 18}, 
+            {x: 512, y: 18.5}, {x: 576, y: 20}, {x: 700, y: 21}, {x: 800, y: 22}, {x: 1000, y: 24.5}
+        ];
+
+        function getInterpolatedAF(freq, points) {
+            if (freq <= points[0].x) return points[0].y;
+            if (freq >= points[points.length-1].x) return points[points.length-1].y;
+            for (let i = 0; i < points.length - 1; i++) {
+                if (freq >= points[i].x && freq <= points[i+1].x) {
+                    const logF = Math.log10(freq);
+                    const logX1 = Math.log10(points[i].x);
+                    const logX2 = Math.log10(points[i+1].x);
+                    const ratio = (logF - logX1) / (logX2 - logX1);
+                    return points[i].y + ratio * (points[i+1].y - points[i].y);
+                }
+            }
+            return 0;
+        }
+
+        // Final Calibration (Verified by User & Scaled for physical width)
+        const bicPads = { l: 14.5, r: 3.2, b: 18.0, t: 5.5, xMin: 30, xMax: 300, yMin: 0, yMax: 20 };
+        const dirPads = { l: 18.0, r: 10.0, b: 17.5, t: 5.0, xMin: 200, xMax: 1000, yMin: 0, yMax: 30 };
+
+        function updateSlider(type) {
+            const isBic = type === 'bic';
+            const slider = isBic ? bicSlider : dirSlider;
+            const p = isBic ? bicPads : dirPads;
+            
+            const freq = parseFloat(slider.value);
+            // Ensure 6108 grey line calculation only valid from 300MHz
+            const clampedFreq = isBic ? freq : Math.max(300, freq);
+            const af = isBic ? getInterpolatedAF(freq, bicPoints) : getInterpolatedAF(clampedFreq, dirPoints);
+
+            // Update UI readout
+            document.getElementById(`${type}-f-readout`).textContent = freq.toFixed(0);
+            document.getElementById(`${type}-af-readout`).textContent = af.toFixed(1);
+            
+            // Update Floating Dot Label
+            const dotLabel = document.getElementById(`${type}-dot-label`);
+            if (dotLabel) {
+                dotLabel.textContent = `${freq.toFixed(0)} MHz | ${af.toFixed(1)} dB/m`;
+            }
+
+            // Position Dot
+            const dot = document.getElementById(`${type}-dot`);
+            dot.style.display = 'block';
+
+            // Logarithmic mapping for X axis
+            const logRange = Math.log10(p.xMax) - Math.log10(p.xMin);
+            const xPercent = ((Math.log10(freq) - Math.log10(p.xMin)) / logRange) * (100 - p.l - p.r) + p.l;
+            
+            // Linear mapping for Y axis (moving upwards from bottom)
+            const yRange = p.yMax - p.yMin;
+            const yPercent = ((af - p.yMin) / yRange) * (100 - p.b - p.t) + p.b;
+
+            dot.style.left = `${xPercent}%`;
+            dot.style.bottom = `${yPercent}%`;
+        }
+
+        bicSlider.addEventListener('input', () => updateSlider('bic'));
+        dirSlider.addEventListener('input', () => updateSlider('dir'));
+
+        // Initialize dots to their default starting positions
+        updateSlider('bic');
+        updateSlider('dir');
+    }
+
+    // --- Initialization Wrapper ---
+    try {
+        initDeviceManager();
+        loadDeviceState();
+        calculateTable();
+        
+        console.log("EMC Assistant Core Initialized.");
+    } catch (e) {
+        console.warn("Core initialization notice:", e.message);
+    }
+    
+    // Always initialize AF sliders regardless of other failures
+    try {
+        initAFSliders();
+        console.log("AF Calibration Ready.");
+    } catch (e) {
+        console.error("AF Slider Error:", e);
+    }
 
 });
