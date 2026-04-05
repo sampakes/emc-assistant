@@ -309,27 +309,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const minL = 0, maxL = 100;
         const mapY = (l) => pad.t + graphH - ((Math.min(maxL, Math.max(minL, l)) - minL) / (maxL - minL)) * graphH;
 
-        // Grid
+        // Grid lines
         ctx.strokeStyle = '#224422'; ctx.lineWidth = 1; ctx.beginPath();
-        ctx.fillStyle = '#66aa66'; ctx.font = '10px monospace';
         for (let i = 0; i <= 10; i++) {
             const x = pad.l + i * (graphW / 10); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b);
             const y = pad.t + i * (graphH / 10); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y);
-            
-            // Labels
-            if (i % 2 === 0) {
-                const fVal = Math.round(startF + (i / 10) * span);
-                ctx.fillText(fVal, x - 10, h - 15);
-                const lVal = 100 - i * 10;
-                ctx.fillText(lVal, 10, y + 4);
-            }
         }
         ctx.stroke();
-
-        // Label Axes
-        ctx.fillStyle = '#aaa';
-        ctx.fillText('MHz', w - 35, h - 15);
-        ctx.fillText('dBµV', 5, 15);
 
         // Limit Line
         const dist = parseInt(document.getElementById('dist').value);
@@ -378,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let s of tableSignals) {
                 if (s.tab === tab) {
                     let shouldDraw = false;
-                    if (plotMode === 'all') {
+                    if (plotMode === 'all' || plotMode === 'active-full') {
                         shouldDraw = true;
                     } else if (s.rot === activeRot) {
                         shouldDraw = true;
@@ -446,15 +432,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!bicSlider || !dirSlider) return;
 
-        // Data curves matching your datasheet references
+        // High-resolution curve data (user-verified at grid intersections)
         const bicPoints = [
-            {x: 30, y: 18}, {x: 40, y: 14}, {x: 50, y: 10}, {x: 70, y: 5.5}, 
-            {x: 94.5, y: 9}, {x: 105, y: 10}, {x: 144, y: 12}, {x: 150, y: 13}, 
-            {x: 200, y: 14}, {x: 224, y: 14.5}, {x: 250, y: 15.5}, {x: 288, y: 17.5}, {x: 300, y: 18.5}
+            {x: 30, y: 18}, {x: 40, y: 14}, {x: 50, y: 10}, {x: 60, y: 6.4},
+            {x: 64, y: 5.3}, {x: 70, y: 5.5}, {x: 80, y: 7.5}, {x: 90, y: 9.3},
+            {x: 100, y: 11}, {x: 130, y: 13.8}, {x: 200, y: 15}, {x: 236, y: 15.5},
+            {x: 300, y: 18.6}
         ];
         const dirPoints = [
-            {x: 300, y: 15.7}, {x: 400, y: 15}, {x: 450, y: 17}, {x: 500, y: 18}, 
-            {x: 512, y: 18.5}, {x: 576, y: 20}, {x: 700, y: 21}, {x: 800, y: 22}, {x: 1000, y: 24.5}
+            {x: 300, y: 15.6}, {x: 327, y: 14.7}, {x: 373, y: 14.9},
+            {x: 400, y: 15.6}, {x: 500, y: 17.6}, {x: 600, y: 18.9},
+            {x: 700, y: 20.9}, {x: 800, y: 22.0}, {x: 900, y: 23.8},
+            {x: 1000, y: 24.9}
         ];
 
         function getInterpolatedAF(freq, points) {
@@ -472,9 +461,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return 0;
         }
 
-        // Final Calibration (Verified by User & Scaled for physical width)
-        const bicPads = { l: 14.5, r: 3.2, b: 18.0, t: 5.5, xMin: 30, xMax: 300, yMin: 0, yMax: 20 };
-        const dirPads = { l: 18.0, r: 10.0, b: 17.5, t: 5.0, xMin: 200, xMax: 1000, yMin: 0, yMax: 30 };
+        // Calibration computed from user click coordinates
+        const bicPads = { l: 14.6, r: 4.4, b: 15.5, t: 4.5, xMin: 30, xMax: 300, yMin: 0, yMax: 20 };
+        const dirPads = { l: 19.4, r: 9.4, b: 19.0, t: 4.6, xMin: 200, xMax: 1000, yMin: 0, yMax: 30 };
 
         function updateSlider(type) {
             const isBic = type === 'bic';
@@ -482,21 +471,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const p = isBic ? bicPads : dirPads;
             
             const freq = parseFloat(slider.value);
-            // Ensure 6108 grey line calculation only valid from 300MHz
             const clampedFreq = isBic ? freq : Math.max(300, freq);
             const af = isBic ? getInterpolatedAF(freq, bicPoints) : getInterpolatedAF(clampedFreq, dirPoints);
 
-            // Update UI readout
-            document.getElementById(`${type}-f-readout`).textContent = freq.toFixed(0);
+            document.getElementById(`${type}-f-input`).value = freq.toFixed(0);
             document.getElementById(`${type}-af-readout`).textContent = af.toFixed(1);
             
-            // Update Floating Dot Label
             const dotLabel = document.getElementById(`${type}-dot-label`);
             if (dotLabel) {
                 dotLabel.textContent = `${freq.toFixed(0)} MHz | ${af.toFixed(1)} dB/m`;
             }
 
-            // Position Dot
             const dot = document.getElementById(`${type}-dot`);
             dot.style.display = 'block';
 
@@ -504,18 +489,57 @@ document.addEventListener('DOMContentLoaded', () => {
             const logRange = Math.log10(p.xMax) - Math.log10(p.xMin);
             const xPercent = ((Math.log10(freq) - Math.log10(p.xMin)) / logRange) * (100 - p.l - p.r) + p.l;
             
-            // Linear mapping for Y axis (moving upwards from bottom)
+            // Linear mapping for Y axis
             const yRange = p.yMax - p.yMin;
             const yPercent = ((af - p.yMin) / yRange) * (100 - p.b - p.t) + p.b;
 
             dot.style.left = `${xPercent}%`;
             dot.style.bottom = `${yPercent}%`;
+
+            // Position crosshair lines (dot to left axis & bottom axis, clipped to graph)
+            const bounds = isBic
+                ? { xMin: 14.7, yMin: 15.9 }
+                : { xMin: 18.9, yMin: 17.7 };
+            const vLine = document.getElementById(`${type}-crosshair-v`);
+            const hLine = document.getElementById(`${type}-crosshair-h`);
+            if (vLine) {
+                vLine.style.display = 'block';
+                vLine.style.left = `${xPercent}%`;
+                vLine.style.bottom = `${bounds.yMin}%`;
+                vLine.style.height = `${yPercent - bounds.yMin}%`;
+            }
+            if (hLine) {
+                hLine.style.display = 'block';
+                hLine.style.bottom = `${yPercent}%`;
+                hLine.style.left = `${bounds.xMin}%`;
+                hLine.style.width = `${xPercent - bounds.xMin}%`;
+            }
         }
 
+        // Slider → updates dot & input
         bicSlider.addEventListener('input', () => updateSlider('bic'));
         dirSlider.addEventListener('input', () => updateSlider('dir'));
 
-        // Initialize dots to their default starting positions
+        // Input field → updates slider & dot (on Enter or blur)
+        const bicInput = document.getElementById('bic-f-input');
+        const dirInput = document.getElementById('dir-f-input');
+        
+        function applyInput(type) {
+            const input = type === 'bic' ? bicInput : dirInput;
+            const slider = type === 'bic' ? bicSlider : dirSlider;
+            const min = type === 'bic' ? 30 : 300;
+            const max = type === 'bic' ? 300 : 1000;
+            const v = Math.min(max, Math.max(min, parseInt(input.value) || min));
+            input.value = v;
+            slider.value = v;
+            updateSlider(type);
+        }
+
+        bicInput.addEventListener('change', () => applyInput('bic'));
+        dirInput.addEventListener('change', () => applyInput('dir'));
+        bicInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyInput('bic'); });
+        dirInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyInput('dir'); });
+
         updateSlider('bic');
         updateSlider('dir');
     }
