@@ -234,7 +234,17 @@
                 </table>
             </div>
             
+            
             <button class="primary-btn" id="calc-table-btn" style="margin-top: 20px;">Calculate & Update Sim</button>
+        </div>
+
+        <!-- Notable Peaks Summary -->
+        <div class="card">
+            <h2><span class="icon">📊</span> Notable Peaks Summary</h2>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 15px;">
+                Top emissions ranked by final field strength (dBµV/m), automatically generated from the measurement data above.
+            </p>
+            <div id="notable-peaks-table" style="overflow-x: auto;"></div>
         </div>
 
         <!-- Antenna Factor Reference Graphs -->
@@ -289,6 +299,24 @@
                             <span>Freq: <input type="number" id="dir-f-input" min="300" max="1000" value="300" step="1" style="width: 60px; background: #fff; color: #172b4d; border: 1px solid #dfe1e6; border-radius: 4px; padding: 4px 6px; font-family: monospace; font-size: 0.9rem; text-align: center; font-weight: bold;"> MHz</span>
                             <span>AF: <strong id="dir-af-readout" style="color: #b5b5b5;">--</strong> dB/m</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cable Loss Reference -->
+        <div class="card">
+            <h2><span class="icon">📉</span> Cable Loss (S21 Measurement)</h2>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 15px;">
+                Measured insertion loss (S21) of the 1 m coaxial cable assembly across 30–1000 MHz. Values represent the total system loss including cable attenuation and connector interface losses. The higher loss at lower frequencies is attributed to connector impedance mismatch, which dominates when the cable is electrically short (λ/10 at 30 MHz). At higher frequencies the connectors match better, and the measured S21 more closely reflects the cable's intrinsic attenuation.
+            </p>
+            <div style="text-align: center;">
+                <canvas id="cable-loss-canvas" width="700" height="320" style="width: 100%; max-width: 700px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff;"></canvas>
+                <div class="input-group" style="padding: 10px 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 6px; text-align: left; margin-top: 10px; max-width: 700px; margin-left: auto; margin-right: auto;">
+                    <input type="range" id="cable-slider" min="30" max="1000" value="100" step="1" style="width: 100%; accent-color: var(--primary); margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 0.95rem;">
+                        <span>Freq: <input type="number" id="cable-f-input" min="30" max="1000" value="100" step="1" style="width: 60px; background: #fff; color: #172b4d; border: 1px solid #dfe1e6; border-radius: 4px; padding: 4px 6px; font-family: monospace; font-size: 0.9rem; text-align: center; font-weight: bold;"> MHz</span>
+                        <span>Loss: <strong id="cable-loss-readout" style="color: var(--danger);">--</strong> dB</span>
                     </div>
                 </div>
             </div>

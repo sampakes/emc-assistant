@@ -63,7 +63,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 { f: '500',    r: '14.52', a: '19',   l: '1.5' },
                 { f: '512',    r: '16.7',  a: '19',   l: '1.5' },
             ],
-            // 'tbody-dir-v': [ ... ],  // Will be added when user provides data
+            'tbody-dir-v': [
+                // 0°
+                { f: '350',  r: '19.84', a: '15',   l: '1.5' },
+                { f: '448',  r: '24.71', a: '16.5', l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+                // 90°
+                { f: '350',  r: '18.98', a: '15',   l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+                // 180°
+                { f: '350',  r: '15.32', a: '15',   l: '1.5' },
+                { f: '416',  r: '15.87', a: '16',   l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+                // 270°
+                { f: '350',  r: '17.92', a: '15',   l: '1.5' },
+                { f: '650',  r: '13.06', a: '20',   l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+                { f: '',     r: '',      a: '',     l: '1.5' },
+            ],
             'tbody-bic-h': [
                 // 0°
                 { f: '50',     r: '24.33', a: '10',   l: '1.5' },
@@ -169,6 +190,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Legacy Calculator logic removed ---
     let tableSignals = [];
 
+    // --- Shared Cable Loss Data (S21 measurement) ---
+    const cableData = [
+        {f: 30, loss: 3.286}, {f: 51.825, loss: 3.068}, {f: 71.225, loss: 2.789},
+        {f: 100.325, loss: 2.678}, {f: 129.425, loss: 2.601}, {f: 175.5, loss: 2.377},
+        {f: 204.6, loss: 2.225}, {f: 231.275, loss: 2.367}, {f: 262.8, loss: 2.245},
+        {f: 328.275, loss: 2.412}, {f: 367.075, loss: 2.28}, {f: 420.425, loss: 2.381},
+        {f: 447.1, loss: 2.0}, {f: 478.625, loss: 2.249}, {f: 541.675, loss: 2.043},
+        {f: 558.65, loss: 2.107}, {f: 687.175, loss: 1.97}, {f: 721.125, loss: 2.184},
+        {f: 767.2, loss: 2.172}, {f: 798.725, loss: 2.246}, {f: 861.775, loss: 2.093},
+        {f: 900.575, loss: 2.237}, {f: 958.775, loss: 1.946}, {f: 1000, loss: 1.705}
+    ];
+    function interpolateCableLoss(freq) {
+        if (freq <= cableData[0].f) return cableData[0].loss;
+        if (freq >= cableData[cableData.length-1].f) return cableData[cableData.length-1].loss;
+        for (let i = 0; i < cableData.length - 1; i++) {
+            if (freq >= cableData[i].f && freq <= cableData[i+1].f) {
+                const t = (freq - cableData[i].f) / (cableData[i+1].f - cableData[i].f);
+                return cableData[i].loss + t * (cableData[i+1].loss - cableData[i].loss);
+            }
+        }
+        return 0;
+    }
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -207,11 +251,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const rInput = row.querySelector('.t-read');
             const aInput = row.querySelector('.t-af');
             const lInput = row.querySelector('.t-loss');
+            if (!fInput || !rInput) return;
             
             const f = parseFloat(fInput.value);
             const read = parseFloat(rInput.value);
-            const af = parseFloat(aInput.value) || 0;
-            const loss = parseFloat(lInput.value) || 0;
+            const af = parseFloat(aInput ? aInput.value : '') || 0;
+
+            // Auto-populate cable loss from S21 data
+            if (!isNaN(f) && f > 0 && lInput) {
+                const measuredLoss = interpolateCableLoss(f);
+                lInput.value = measuredLoss.toFixed(2);
+            }
+            const loss = parseFloat(lInput ? lInput.value : '') || 0;
 
             if (!isNaN(f) && !isNaN(read)) {
                 const total = read + af + loss;
@@ -241,6 +292,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Auto-scale to fit the new points
         autoSpanTable();
+
+        // Update notable peaks summary
+        try { generateNotablePeaks(); } catch(e) { console.warn('Notable peaks:', e); }
     }
 
     function autoSpanTable() {
@@ -283,6 +337,70 @@ document.addEventListener('DOMContentLoaded', () => {
     if (calcTableBtn) calcTableBtn.addEventListener('click', calculateTable);
 
     document.querySelectorAll('input[name="plot-mode"]').forEach(r => r.addEventListener('change', calculateTable));
+
+    // --- Notable Peaks Summary ---
+    function generateNotablePeaks() {
+        const container = document.getElementById('notable-peaks-table');
+        if (!container) return;
+
+        const deviceName = appData.currentDevice;
+        const deviceData = DEFAULT_DATA[deviceName];
+        if (!deviceData) { container.innerHTML = '<p style="color:#aaa;">No data loaded.</p>'; return; }
+
+        const tabLabels = {
+            'tbody-dir-h': { antenna: 'Directional UPA 6108', pol: 'Horizontal' },
+            'tbody-dir-v': { antenna: 'Directional UPA 6108', pol: 'Vertical' },
+            'tbody-bic-h': { antenna: 'Biconical VBA 6106', pol: 'Horizontal' },
+            'tbody-bic-v': { antenna: 'Biconical VBA 6106', pol: 'Vertical' }
+        };
+        const rotLabels = ['0°','0°','0°','0°','90°','90°','90°','90°','180°','180°','180°','180°','270°','270°','270°','270°'];
+
+        let peaks = [];
+        for (const [tbodyId, rows] of Object.entries(deviceData)) {
+            const info = tabLabels[tbodyId];
+            if (!info || !rows) continue;
+            rows.forEach((row, i) => {
+                const f = parseFloat(row.f), r = parseFloat(row.r), a = parseFloat(row.a);
+                if (isNaN(f) || isNaN(r) || f === 0) return;
+                const l = interpolateCableLoss(f);
+                const total = r + (isNaN(a) ? 0 : a) + l;
+                const limit = f < 230 ? 40 : 47;
+                const margin = limit - total;
+                peaks.push({
+                    freq: f, reading: r, af: a, loss: l, total: total,
+                    limit: limit, margin: margin,
+                    antenna: info.antenna, pol: info.pol,
+                    rot: rotLabels[i] || '?'
+                });
+            });
+        }
+
+        peaks.sort((a, b) => b.total - a.total);
+        const top = peaks.slice(0, 5);
+
+        let html = `<table class="data-table" style="width:100%; font-size:0.85rem;">
+            <thead><tr>
+                <th>#</th><th>Freq (MHz)</th><th>Final (dBµV/m)</th><th>Limit</th><th>Margin (dB)</th>
+                <th>Antenna</th><th>Polarisation</th><th>Orientation</th>
+            </tr></thead><tbody>`;
+        top.forEach((p, i) => {
+            const mColor = p.margin >= 6 ? 'var(--success)' : p.margin >= 0 ? 'var(--warning)' : 'var(--danger)';
+            html += `<tr>
+                <td>${i+1}</td>
+                <td>${p.freq}</td>
+                <td><strong>${p.total.toFixed(1)}</strong></td>
+                <td>${p.limit}</td>
+                <td style="color:${mColor}; font-weight:bold;">${p.margin >= 0 ? '+' : ''}${p.margin.toFixed(1)}</td>
+                <td>${p.antenna}</td>
+                <td>${p.pol}</td>
+                <td>${p.rot}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+
 
     // --- Drawing ---
     function drawScreen() {
@@ -561,6 +679,131 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("AF Calibration Ready.");
     } catch (e) {
         console.error("AF Slider Error:", e);
+    }
+
+    // --- Cable Loss Chart ---
+    function initCableLoss() {
+        const canvas = document.getElementById('cable-loss-canvas');
+        const slider = document.getElementById('cable-slider');
+        const freqInput = document.getElementById('cable-f-input');
+        const lossReadout = document.getElementById('cable-loss-readout');
+        if (!canvas || !slider) return;
+
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        const pad = { l: 55, r: 20, t: 20, b: 40 };
+        const gw = w - pad.l - pad.r, gh = h - pad.t - pad.b;
+
+        // S21 data is shared (cableData defined at top scope)
+
+        const fMin = 30, fMax = 1000, lossMin = 1.0, lossMax = 4.0;
+        const mapX = f => pad.l + ((f - fMin) / (fMax - fMin)) * gw;
+        const mapY = l => pad.t + ((l - lossMax) / (lossMin - lossMax)) * gh;
+
+        const interpolateLoss = interpolateCableLoss;
+
+        function draw(markerFreq) {
+            ctx.clearRect(0, 0, w, h);
+
+            // Grid
+            ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 0.5;
+            ctx.fillStyle = '#666'; ctx.font = '11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            // X-axis: frequency gridlines every 100 MHz
+            for (let f = 100; f <= 1000; f += 100) {
+                const x = mapX(f);
+                ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + gh); ctx.stroke();
+                ctx.fillText(f, x, h - 10);
+            }
+            // Also label 30
+            ctx.fillText('30', mapX(30), h - 10);
+            ctx.fillText('Frequency (MHz)', w / 2, h - 1);
+
+            // Y-axis: loss gridlines every 0.5 dB
+            ctx.textAlign = 'right';
+            for (let l = 1.0; l <= 4.0; l += 0.5) {
+                const y = mapY(l);
+                ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gw, y); ctx.stroke();
+                ctx.fillText(l.toFixed(1), pad.l - 8, y + 4);
+            }
+
+            // Y-axis label
+            ctx.save();
+            ctx.translate(14, h / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText('Insertion Loss (dB)', 0, 0);
+            ctx.restore();
+
+            // Data line
+            ctx.strokeStyle = 'var(--primary, #0052cc)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            cableData.forEach((p, i) => {
+                const x = mapX(p.f), y = mapY(p.loss);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Data points
+            ctx.fillStyle = 'var(--primary, #0052cc)';
+            cableData.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(mapX(p.f), mapY(p.loss), 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Marker
+            const loss = interpolateLoss(markerFreq);
+            const mx = mapX(markerFreq), my = mapY(loss);
+            // Crosshair
+            ctx.setLineDash([4, 3]);
+            ctx.strokeStyle = 'rgba(255,86,48,0.5)'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx, pad.t + gh); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(pad.l, my); ctx.lineTo(mx, my); ctx.stroke();
+            ctx.setLineDash([]);
+            // Dot
+            ctx.fillStyle = '#ff5630';
+            ctx.beginPath(); ctx.arc(mx, my, 6, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(mx, my, 6, 0, Math.PI * 2); ctx.stroke();
+            // Label
+            ctx.fillStyle = '#333'; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'left';
+            ctx.fillText(`${markerFreq} MHz | ${loss.toFixed(2)} dB`, mx + 10, my - 8);
+
+            lossReadout.textContent = loss.toFixed(2);
+        }
+
+        function update() {
+            const freq = parseInt(slider.value);
+            freqInput.value = freq;
+            draw(freq);
+        }
+
+        slider.addEventListener('input', update);
+        freqInput.addEventListener('change', () => {
+            const v = Math.min(1000, Math.max(30, parseInt(freqInput.value) || 30));
+            freqInput.value = v;
+            slider.value = v;
+            draw(v);
+        });
+        freqInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const v = Math.min(1000, Math.max(30, parseInt(freqInput.value) || 30));
+                freqInput.value = v;
+                slider.value = v;
+                draw(v);
+            }
+        });
+
+        draw(100);
+    }
+
+    try {
+        initCableLoss();
+        console.log("Cable Loss Chart Ready.");
+    } catch (e) {
+        console.error("Cable Loss Chart Error:", e);
     }
 
 });
