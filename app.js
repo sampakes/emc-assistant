@@ -187,6 +187,102 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Export / Import ---
+    function exportData() {
+        const tbodies = ['tbody-dir-v', 'tbody-dir-h', 'tbody-bic-v', 'tbody-bic-h'];
+        const deviceName = appData.currentDevice;
+        const data = { device: deviceName, tables: {} };
+
+        tbodies.forEach(tbId => {
+            const tbody = document.getElementById(tbId);
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr');
+            data.tables[tbId] = [];
+            rows.forEach(row => {
+                data.tables[tbId].push({
+                    f: row.querySelector('.t-freq')?.value || '',
+                    r: row.querySelector('.t-read')?.value || '',
+                    a: row.querySelector('.t-af')?.value || '',
+                    l: row.querySelector('.t-loss')?.value || ''
+                });
+            });
+        });
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${deviceName.replace(/\s+/g, '_')}_emc_data.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    function importData(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!data.tables) { alert('Invalid file format.'); return; }
+
+                // Add device if it doesn't exist
+                if (data.device && !appData.devices.includes(data.device)) {
+                    appData.devices.push(data.device);
+                    DEFAULT_DATA[data.device] = {};
+                }
+                if (data.device) {
+                    appData.currentDevice = data.device;
+                    const selector = document.getElementById('device-selector');
+                    // Re-render selector options
+                    selector.innerHTML = '';
+                    appData.devices.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d; opt.textContent = d;
+                        selector.appendChild(opt);
+                    });
+                    selector.value = data.device;
+                }
+
+                // Populate tables
+                for (const [tbId, rows] of Object.entries(data.tables)) {
+                    const tbody = document.getElementById(tbId);
+                    if (!tbody) continue;
+                    const trs = tbody.querySelectorAll('tr');
+                    rows.forEach((row, i) => {
+                        if (!trs[i]) return;
+                        const fI = trs[i].querySelector('.t-freq');
+                        const rI = trs[i].querySelector('.t-read');
+                        const aI = trs[i].querySelector('.t-af');
+                        const lI = trs[i].querySelector('.t-loss');
+                        if (fI) fI.value = row.f || '';
+                        if (rI) rI.value = row.r || '';
+                        if (aI) aI.value = row.a || '';
+                        if (lI) lI.value = row.l || '';
+                    });
+
+                    // Also update DEFAULT_DATA so it persists in-session
+                    DEFAULT_DATA[appData.currentDevice] = DEFAULT_DATA[appData.currentDevice] || {};
+                    DEFAULT_DATA[appData.currentDevice][tbId] = rows;
+                }
+
+                calculateTable();
+                alert(`Loaded data for "${data.device}".`);
+            } catch (err) {
+                alert('Error reading file: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    document.getElementById('export-data-btn')?.addEventListener('click', exportData);
+    document.getElementById('import-data-btn')?.addEventListener('click', () => {
+        document.getElementById('import-file-input').click();
+    });
+    document.getElementById('import-file-input')?.addEventListener('change', (e) => {
+        if (e.target.files[0]) {
+            importData(e.target.files[0]);
+            e.target.value = '';
+        }
+    });
+
     // --- Legacy Calculator logic removed ---
     let tableSignals = [];
 
@@ -210,6 +306,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 return cableData[i].loss + t * (cableData[i+1].loss - cableData[i].loss);
             }
         }
+        return 0;
+    }
+
+    // --- Shared AF Data (user-verified at grid intersections) ---
+    const bicAFPoints = [
+        {x: 30, y: 18}, {x: 40, y: 14}, {x: 50, y: 10}, {x: 60, y: 6.4},
+        {x: 64, y: 5.3}, {x: 70, y: 5.5}, {x: 80, y: 7.5}, {x: 90, y: 9.3},
+        {x: 100, y: 11}, {x: 130, y: 13.8}, {x: 200, y: 15}, {x: 236, y: 15.5},
+        {x: 300, y: 18.6}
+    ];
+    const dirAFPoints = [
+        {x: 300, y: 15.6}, {x: 327, y: 14.7}, {x: 373, y: 14.9},
+        {x: 400, y: 15.6}, {x: 500, y: 17.6}, {x: 600, y: 18.9},
+        {x: 700, y: 20.9}, {x: 800, y: 22.0}, {x: 900, y: 23.8},
+        {x: 1000, y: 24.9}
+    ];
+    function getInterpolatedAF(freq, points) {
+        if (freq <= points[0].x) return points[0].y;
+        if (freq >= points[points.length-1].x) return points[points.length-1].y;
+        for (let i = 0; i < points.length - 1; i++) {
+            if (freq >= points[i].x && freq <= points[i+1].x) {
+                const logF = Math.log10(freq);
+                const logX1 = Math.log10(points[i].x);
+                const logX2 = Math.log10(points[i+1].x);
+                const ratio = (logF - logX1) / (logX2 - logX1);
+                return points[i].y + ratio * (points[i+1].y - points[i].y);
+            }
+        }
+        return 0;
+    }
+    function lookupAF(freq) {
+        if (freq >= 30 && freq <= 300) return getInterpolatedAF(freq, bicAFPoints);
+        if (freq > 300 && freq <= 1000) return getInterpolatedAF(freq, dirAFPoints);
         return 0;
     }
 
@@ -255,13 +384,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const f = parseFloat(fInput.value);
             const read = parseFloat(rInput.value);
-            const af = parseFloat(aInput ? aInput.value : '') || 0;
 
-            // Auto-populate cable loss from S21 data
-            if (!isNaN(f) && f > 0 && lInput) {
-                const measuredLoss = interpolateCableLoss(f);
-                lInput.value = measuredLoss.toFixed(2);
+            // Auto-populate AF and cable loss from measured data
+            if (!isNaN(f) && f > 0) {
+                if (aInput) aInput.value = lookupAF(f).toFixed(1);
+                if (lInput) lInput.value = interpolateCableLoss(f).toFixed(2);
             }
+            const af = parseFloat(aInput ? aInput.value : '') || 0;
             const loss = parseFloat(lInput ? lInput.value : '') || 0;
 
             if (!isNaN(f) && !isNaN(read)) {
@@ -550,34 +679,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!bicSlider || !dirSlider) return;
 
-        // High-resolution curve data (user-verified at grid intersections)
-        const bicPoints = [
-            {x: 30, y: 18}, {x: 40, y: 14}, {x: 50, y: 10}, {x: 60, y: 6.4},
-            {x: 64, y: 5.3}, {x: 70, y: 5.5}, {x: 80, y: 7.5}, {x: 90, y: 9.3},
-            {x: 100, y: 11}, {x: 130, y: 13.8}, {x: 200, y: 15}, {x: 236, y: 15.5},
-            {x: 300, y: 18.6}
-        ];
-        const dirPoints = [
-            {x: 300, y: 15.6}, {x: 327, y: 14.7}, {x: 373, y: 14.9},
-            {x: 400, y: 15.6}, {x: 500, y: 17.6}, {x: 600, y: 18.9},
-            {x: 700, y: 20.9}, {x: 800, y: 22.0}, {x: 900, y: 23.8},
-            {x: 1000, y: 24.9}
-        ];
-
-        function getInterpolatedAF(freq, points) {
-            if (freq <= points[0].x) return points[0].y;
-            if (freq >= points[points.length-1].x) return points[points.length-1].y;
-            for (let i = 0; i < points.length - 1; i++) {
-                if (freq >= points[i].x && freq <= points[i+1].x) {
-                    const logF = Math.log10(freq);
-                    const logX1 = Math.log10(points[i].x);
-                    const logX2 = Math.log10(points[i+1].x);
-                    const ratio = (logF - logX1) / (logX2 - logX1);
-                    return points[i].y + ratio * (points[i+1].y - points[i].y);
-                }
-            }
-            return 0;
-        }
+        // AF data is shared (bicAFPoints, dirAFPoints, getInterpolatedAF defined at top scope)
+        const bicPoints = bicAFPoints;
+        const dirPoints = dirAFPoints;
 
         // Calibration computed from user click coordinates
         const bicPads = { l: 14.6, r: 4.4, b: 15.5, t: 4.5, xMin: 30, xMax: 300, yMin: 0, yMax: 20 };

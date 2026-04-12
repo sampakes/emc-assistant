@@ -58,6 +58,10 @@
                             </select>
                             <button id="add-device-btn" style="background: var(--primary); color: #000; border:none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size:1rem; font-weight:bold;">+</button>
                             <button id="del-device-btn" style="background: var(--danger); color: #fff; border:none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size:0.8rem; font-weight:bold;">🗑</button>
+                            <span style="border-left: 1px solid var(--border); height: 20px; margin: 0 4px;"></span>
+                            <button id="export-data-btn" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;" title="Export data as JSON">📥 Export</button>
+                            <button id="import-data-btn" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;" title="Import data from JSON">📤 Import</button>
+                            <input type="file" id="import-file-input" accept=".json" style="display: none;">
                         </div>
                     </div>
                     <div style="display: flex; gap: 15px;">
@@ -245,6 +249,50 @@
                 Top emissions ranked by final field strength (dBµV/m), automatically generated from the measurement data above.
             </p>
             <div id="notable-peaks-table" style="overflow-x: auto;"></div>
+        </div>
+
+        <!-- Calculation Proof -->
+        <div class="card">
+            <details id="calc-proof">
+                <summary style="cursor: pointer; font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; user-select: none;">
+                    <span class="icon">🧮</span> Calculation Proof
+                </summary>
+                <div style="margin-top: 16px; font-size: 0.9rem; line-height: 1.7; color: var(--text-secondary);">
+                    <h3 style="margin-bottom: 8px; color: var(--text-main);">Formula</h3>
+                    <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px; font-family: monospace; font-size: 0.95rem; margin-bottom: 16px;">
+                        <strong>E (dBµV/m)</strong> = Reading (dBµV) + AF (dB/m) + Cable Loss (dB)
+                    </div>
+                    <p>Where:</p>
+                    <ul style="margin: 8px 0 16px 20px;">
+                        <li><strong>Reading</strong> — Peak amplitude measured on the ESCI 7 receiver (dBµV)</li>
+                        <li><strong>AF</strong> — Antenna Factor from the manufacturer's datasheet curve, interpolated at the measurement frequency (dB/m)</li>
+                        <li><strong>Cable Loss</strong> — Insertion loss (S21) of the 1 m coaxial cable assembly, measured via VNA and interpolated at the measurement frequency (dB)</li>
+                    </ul>
+
+                    <h3 style="margin-bottom: 8px; color: var(--text-main);">CISPR 32 / EN 55032 Radiated Emission Limits (Class B, 3 m)</h3>
+                    <table class="data-table" style="font-size: 0.85rem; margin-bottom: 16px;">
+                        <thead><tr><th>Frequency Range</th><th>Limit (dBµV/m)</th></tr></thead>
+                        <tbody>
+                            <tr><td>30 – 230 MHz</td><td>40</td></tr>
+                            <tr><td>230 – 1000 MHz</td><td>47</td></tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-bottom: 16px;"><strong>Margin (dB)</strong> = Limit − E. A positive margin means the emission is below the limit (pass). A margin ≥ 6 dB provides confidence for full compliance testing.</p>
+
+                    <h3 style="margin-bottom: 8px; color: var(--text-main);">Worked Example</h3>
+                    <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px; font-family: monospace; font-size: 0.85rem; line-height: 2;">
+                        <strong>Measurement:</strong> Biconical Horizontal, 0° rotation, Peak at 50 MHz<br>
+                        Reading = 24.33 dBµV<br>
+                        AF at 50 MHz = 10.0 dB/m (from VBA 6106 datasheet)<br>
+                        Cable Loss at 50 MHz = 3.09 dB (from S21 measurement)<br>
+                        <br>
+                        <strong>E</strong> = 24.33 + 10.0 + 3.09 = <strong>37.42 dBµV/m</strong><br>
+                        <br>
+                        Limit at 50 MHz (Class B, 3 m) = 40 dBµV/m<br>
+                        <strong>Margin</strong> = 40 − 37.42 = <strong style="color: var(--warning);">+2.58 dB</strong> (pass, but below 6 dB confidence threshold)
+                    </div>
+                </div>
+            </details>
         </div>
 
         <!-- Antenna Factor Reference Graphs -->
