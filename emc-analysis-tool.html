@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMC Analysis Tool</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>EMC Assistant</h1>
+            <p>Interactive Radiated Emissions Pre-Compliance Tool</p>
+        </header>
+
+        <!-- Full ESCI 7 Interface Simulation -->
+        <div class="card esci-chassis">
+            <div class="esci-display-area">
+                <!-- Screen -->
+                <div class="esci-screen">
+                    <div class="screen-header">
+                        <span class="header-left" id="center-freq-readout">CENTER 500.00 MHz</span>
+                        <span class="header-center">R&S ESCI 7 SIMULATION</span>
+                        <span class="header-right rbw-ind">RBW: 120 kHz</span>
+                    </div>
+                    <div class="screen-plot-area">
+                        <canvas id="esci-canvas" width="600" height="350"></canvas>
+                        <div id="marker-readout" class="marker-readout" style="display:none;">
+                            MKR: <span id="mkr-freq">--</span> MHz <br>
+                            LVL: <span id="mkr-level">--</span> dBµV/m
+                        </div>
+                    </div>
+                    <div class="screen-footer">
+                        <span id="footer-msg">System Ready.</span>
+                        <span>ATT: AUTO</span>
+                    </div>
+                </div>
+
+                <!-- Softkeys and Control Panel removed per user request -->
+            </div>
+        </div>
+
+
+        <!-- 16-Point Multi-Measurement Data Collection -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 20px;">
+                <div style="flex: 1; min-width: 300px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <h2 style="margin: 0; white-space: nowrap;"><span class="icon">📊</span> Multi-Measurement Data Collection</h2>
+                        <div style="display: flex; gap: 5px; align-items: center; background: var(--surface); padding: 5px; border-radius: 6px; border: 1px solid var(--border);">
+                            <label style="margin:0; font-size: 0.8rem; padding-left: 5px;">Device:</label>
+                            <select id="device-selector" style="background: var(--bg); border: 1px solid var(--border); padding: 4px; font-size: 0.85rem; font-weight: 600; min-width: 150px; border-radius: 4px;">
+                                <!-- Options will be generated dynamically -->
+                            </select>
+                            <button id="add-device-btn" style="background: var(--primary); color: #000; border:none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size:1rem; font-weight:bold;">+</button>
+                            <button id="del-device-btn" style="background: var(--danger); color: #fff; border:none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size:0.8rem; font-weight:bold;">🗑</button>
+                            <span style="border-left: 1px solid var(--border); height: 20px; margin: 0 4px;"></span>
+                            <button id="export-data-btn" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;" title="Export data as JSON">📥 Export</button>
+                            <button id="import-data-btn" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;" title="Import data from JSON">📤 Import</button>
+                            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="input-group">
+                            <label>Meas. Distance</label>
+                            <select id="dist" style="padding: 6px 12px; font-size: 0.85rem;">
+                                <option value="3" selected>3 Meters</option>
+                                <option value="10">10 Meters</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Limit Class</label>
+                            <select id="class" style="padding: 6px 12px; font-size: 0.85rem;">
+                                <option value="B" selected>Class B (Res)</option>
+                                <option value="A">Class A (Ind)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 20px; align-items: stretch; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: var(--surface); flex-wrap: wrap;">
+                     <div style="display: flex; flex-direction: column; justify-content: center;">
+                         <label style="font-size: 0.75rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase;">Plot Mode</label>
+                         <div class="toggle-group" style="width: auto;">
+                             <input type="radio" id="plot-active" name="plot-mode" value="active" checked>
+                             <label for="plot-active" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Current Band</label>
+                             
+                             <input type="radio" id="plot-active-full" name="plot-mode" value="active-full">
+                             <label for="plot-active-full" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">All Rotations</label>
+                             
+                             <input type="radio" id="plot-all" name="plot-mode" value="all">
+                             <label for="plot-all" class="toggle-btn" style="padding: 6px 10px; font-size: 0.8rem;">Overlay All</label>
+                         </div>
+                     </div>
+                     <div style="border-left: 1px solid var(--border); padding-left: 15px; display: flex; flex-direction: column; justify-content: center;">
+                         <label style="font-size: 0.75rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase;">Trace Legend</label>
+                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; font-size: 0.8rem; font-weight: 600;">
+                             <span style="color: #00ffff;">■ Dir ↕</span>
+                             <span style="color: #ff00ff;">■ Dir ↔</span>
+                             <span style="color: #00ff00;">■ Bic ↕</span>
+                             <span style="color: #ffaa00;">■ Bic ↔</span>
+                         </div>
+                     </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="dir-v">Directional ↕</button>
+                <button class="tab-btn" data-tab="dir-h">Directional ↔</button>
+                <button class="tab-btn" data-tab="bic-v">Biconical ↕</button>
+                <button class="tab-btn" data-tab="bic-h">Biconical ↔</button>
+            </div>
+
+            <!-- Generate the 4 Tab Contents (we will use a JS loop to populate rows to save space, or just write them out) -->
+            <!-- Writing them out makes it clear and easy to read without complex JS rendering -->
+            
+            <div id="dir-v" class="tab-content active">
+                <div class="rotation-toggles">
+                    <button class="rot-btn active" data-rot="0">0°</button>
+                    <button class="rot-btn" data-rot="90">90°</button>
+                    <button class="rot-btn" data-rot="180">180°</button>
+                    <button class="rot-btn" data-rot="270">270°</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Peak</th><th>Freq (MHz)</th><th>Reading (dBµV)</th><th>AF (dB/m)</th><th>Loss (dB)</th><th>Final (dBµV/m)</th><th>Margin (dB)</th></tr></thead>
+                    <tbody id="tbody-dir-v">
+                        <tr data-rot="0"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="dir-h" class="tab-content">
+                <div class="rotation-toggles">
+                    <button class="rot-btn active" data-rot="0">0°</button>
+                    <button class="rot-btn" data-rot="90">90°</button>
+                    <button class="rot-btn" data-rot="180">180°</button>
+                    <button class="rot-btn" data-rot="270">270°</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Peak</th><th>Freq (MHz)</th><th>Reading (dBµV)</th><th>AF (dB/m)</th><th>Loss (dB)</th><th>Final (dBµV/m)</th><th>Margin (dB)</th></tr></thead>
+                    <tbody id="tbody-dir-h">
+                        <tr data-rot="0"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="bic-v" class="tab-content">
+                <div class="rotation-toggles">
+                    <button class="rot-btn active" data-rot="0">0°</button>
+                    <button class="rot-btn" data-rot="90">90°</button>
+                    <button class="rot-btn" data-rot="180">180°</button>
+                    <button class="rot-btn" data-rot="270">270°</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Peak</th><th>Freq (MHz)</th><th>Reading (dBµV)</th><th>AF (dB/m)</th><th>Loss (dB)</th><th>Final (dBµV/m)</th><th>Margin (dB)</th></tr></thead>
+                    <tbody id="tbody-bic-v">
+                        <tr data-rot="0"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="bic-h" class="tab-content">
+                <div class="rotation-toggles">
+                    <button class="rot-btn active" data-rot="0">0°</button>
+                    <button class="rot-btn" data-rot="90">90°</button>
+                    <button class="rot-btn" data-rot="180">180°</button>
+                    <button class="rot-btn" data-rot="270">270°</button>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Peak</th><th>Freq (MHz)</th><th>Reading (dBµV)</th><th>AF (dB/m)</th><th>Loss (dB)</th><th>Final (dBµV/m)</th><th>Margin (dB)</th></tr></thead>
+                    <tbody id="tbody-bic-h">
+                        <tr data-rot="0"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="0"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="90" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="180" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>1</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>2</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>3</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                        <tr data-rot="270" style="display:none"><td>4</td><td><input type="number" class="t-freq"></td><td><input type="number" class="t-read"></td><td><input type="number" class="t-af"></td><td><input type="number" class="t-loss" value="1.5"></td><td class="t-final">--</td><td class="t-margin">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            
+            <button class="primary-btn" id="calc-table-btn" style="margin-top: 20px;">Calculate & Update Sim</button>
+        </div>
+
+        <!-- Notable Peaks Summary -->
+        <div class="card">
+            <h2><span class="icon">📊</span> Notable Peaks Summary</h2>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 15px;">
+                Top emissions ranked by final field strength (dBµV/m), automatically generated from the measurement data above.
+            </p>
+            <div id="notable-peaks-table" style="overflow-x: auto;"></div>
+        </div>
+
+        <!-- Calculation Proof -->
+        <div class="card">
+            <details id="calc-proof">
+                <summary style="cursor: pointer; font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; user-select: none;">
+                    <span class="icon">🧮</span> Calculation Proof
+                </summary>
+                <div style="margin-top: 16px; font-size: 0.9rem; line-height: 1.7; color: var(--text-secondary);">
+                    <h3 style="margin-bottom: 8px; color: var(--text-main);">Formula</h3>
+                    <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px; font-family: monospace; font-size: 0.95rem; margin-bottom: 16px;">
+                        <strong>E (dBµV/m)</strong> = Reading (dBµV) + AF (dB/m) + Cable Loss (dB)
+                    </div>
+                    <p>Where:</p>
+                    <ul style="margin: 8px 0 16px 20px;">
+                        <li><strong>Reading</strong> — Peak amplitude measured on the ESCI 7 receiver (dBµV)</li>
+                        <li><strong>AF</strong> — Antenna Factor from the manufacturer's datasheet curve, interpolated at the measurement frequency (dB/m)</li>
+                        <li><strong>Cable Loss</strong> — Insertion loss (S21) of the 1 m coaxial cable assembly, measured via VNA and interpolated at the measurement frequency (dB)</li>
+                    </ul>
+
+                    <h3 style="margin-bottom: 8px; color: var(--text-main);">CISPR 32 / EN 55032 Radiated Emission Limits (Class B, 3 m)</h3>
+                    <table class="data-table" style="font-size: 0.85rem; margin-bottom: 16px;">
+                        <thead><tr><th>Frequency Range</th><th>Limit (dBµV/m)</th></tr></thead>
+                        <tbody>
+                            <tr><td>30 – 230 MHz</td><td>40</td></tr>
+                            <tr><td>230 – 1000 MHz</td><td>47</td></tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-bottom: 16px;"><strong>Margin (dB)</strong> = Limit − E. A positive margin means the emission is below the limit (pass). A margin ≥ 6 dB provides confidence for full compliance testing.</p>
+
+                    <h3 style="margin-bottom: 8px; color: var(--text-main);">Worked Example</h3>
+                    <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px; font-family: monospace; font-size: 0.85rem; line-height: 2;">
+                        <strong>Measurement:</strong> Biconical Horizontal, 0° rotation, Peak at 50 MHz<br>
+                        Reading = 24.33 dBµV<br>
+                        AF at 50 MHz = 10.0 dB/m (from VBA 6106 datasheet)<br>
+                        Cable Loss at 50 MHz = 3.09 dB (from S21 measurement)<br>
+                        <br>
+                        <strong>E</strong> = 24.33 + 10.0 + 3.09 = <strong>37.42 dBµV/m</strong><br>
+                        <br>
+                        Limit at 50 MHz (Class B, 3 m) = 40 dBµV/m<br>
+                        <strong>Margin</strong> = 40 − 37.42 = <strong style="color: var(--warning);">+2.58 dB</strong> (pass, but below 6 dB confidence threshold)
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Antenna Factor Reference Graphs -->
+        <div class="card">
+            <h2><span class="icon">📡</span> Antenna Factor Reference (Datasheet)</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <p style="color: #aaa; font-size: 0.85rem; margin: 0;">
+                    AF values used in calculations are read from these typical antenna factor curves.
+                    Move the sliders to check typical AF values at specific frequencies.
+                </p>
+                <button id="toggle-calibration" style="background: var(--surface); color: var(--primary); border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; white-space: nowrap;">⊹ Calibrate</button>
+            </div>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                
+                <!-- Biconical Option A Block -->
+                <div style="text-align: center; display: flex; flex-direction: column; width: 480px; max-width: 100%;">
+                    <h3 style="margin-bottom: 8px; color: var(--primary);">Biconical VBA 6106 (30–300 MHz)</h3>
+                    <div style="position: relative; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px;">
+                        <img src="./VBA 6106 Typical AF.png" alt="Biconical Antenna AF" style="width: 100%; display: block; border-radius: 6px;" />
+                        <div id="bic-crosshair-v" style="position:absolute; width:0; border-left:1px dashed rgba(255,51,51,0.6); left:0; display:none; pointer-events:none; z-index:9;"></div>
+                        <div id="bic-crosshair-h" style="position:absolute; height:0; border-top:1px dashed rgba(255,51,51,0.6); bottom:0; display:none; pointer-events:none; z-index:9;"></div>
+                        <div id="bic-dot" style="position: absolute; width: 14px; height: 14px; background-color: #ff3333; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, 50%); left: 0%; bottom: 0%; display: none; box-shadow: 0 0 10px rgba(255,51,51,0.6); z-index: 10;">
+                            <div id="bic-dot-label" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(20,20,20,0.85); backdrop-filter: blur(4px); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-family: monospace;">-- MHz</div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group" style="padding: 10px 15px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; text-align: left;">
+                        <input type="range" id="bic-slider" min="30" max="300" value="50" step="1" style="width: 100%; accent-color: #ff3333; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 0.95rem;">
+                            <span>Freq: <input type="number" id="bic-f-input" min="30" max="300" value="50" step="1" style="width: 60px; background: #fff; color: #172b4d; border: 1px solid #dfe1e6; border-radius: 4px; padding: 4px 6px; font-family: monospace; font-size: 0.9rem; text-align: center; font-weight: bold;"> MHz</span>
+                            <span>AF: <strong id="bic-af-readout" style="color: #ff3333;">--</strong> dB/m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Directional Option A Block -->
+                <div style="text-align: center; display: flex; flex-direction: column; width: 480px; max-width: 100%;">
+                    <h3 style="margin-bottom: 8px; color: var(--primary);">Directional UPA 6108 (300–1000 MHz)</h3>
+                    <div style="position: relative; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px;">
+                        <img src="./UPA 6108 Typical AF .png" alt="Directional UPA 6108 AF" style="width: 100%; display: block; border-radius: 6px;" />
+                        <div id="dir-crosshair-v" style="position:absolute; width:0; border-left:1px dashed rgba(181,181,181,0.6); left:0; display:none; pointer-events:none; z-index:9;"></div>
+                        <div id="dir-crosshair-h" style="position:absolute; height:0; border-top:1px dashed rgba(181,181,181,0.6); bottom:0; display:none; pointer-events:none; z-index:9;"></div>
+                        <div id="dir-dot" style="position: absolute; width: 14px; height: 14px; background-color: #b5b5b5; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, 50%); left: 0%; bottom: 0%; display: none; box-shadow: 0 0 10px rgba(255,255,255,0.4); z-index: 10;">
+                            <div id="dir-dot-label" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(20,20,20,0.85); backdrop-filter: blur(4px); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-family: monospace;">-- MHz</div>
+                        </div>
+                    </div>
+
+                    <div class="input-group" style="padding: 10px 15px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; text-align: left;">
+                        <input type="range" id="dir-slider" min="300" max="1000" value="300" step="1" style="width: 100%; accent-color: #b5b5b5; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 0.95rem;">
+                            <span>Freq: <input type="number" id="dir-f-input" min="300" max="1000" value="300" step="1" style="width: 60px; background: #fff; color: #172b4d; border: 1px solid #dfe1e6; border-radius: 4px; padding: 4px 6px; font-family: monospace; font-size: 0.9rem; text-align: center; font-weight: bold;"> MHz</span>
+                            <span>AF: <strong id="dir-af-readout" style="color: #b5b5b5;">--</strong> dB/m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cable Loss Reference -->
+        <div class="card">
+            <h2><span class="icon">📉</span> Cable Loss (S21 Measurement)</h2>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 15px;">
+                Measured insertion loss (S21) of the 1 m coaxial cable assembly across 30–1000 MHz. Values represent the total system loss including cable attenuation and connector interface losses. The higher loss at lower frequencies is attributed to connector impedance mismatch, which dominates when the cable is electrically short (λ/10 at 30 MHz). At higher frequencies the connectors match better, and the measured S21 more closely reflects the cable's intrinsic attenuation.
+            </p>
+            <div style="text-align: center;">
+                <canvas id="cable-loss-canvas" width="700" height="320" style="width: 100%; max-width: 700px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff;"></canvas>
+                <div class="input-group" style="padding: 10px 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 6px; text-align: left; margin-top: 10px; max-width: 700px; margin-left: auto; margin-right: auto;">
+                    <input type="range" id="cable-slider" min="30" max="1000" value="100" step="1" style="width: 100%; accent-color: var(--primary); margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 0.95rem;">
+                        <span>Freq: <input type="number" id="cable-f-input" min="30" max="1000" value="100" step="1" style="width: 60px; background: #fff; color: #172b4d; border: 1px solid #dfe1e6; border-radius: 4px; padding: 4px 6px; font-family: monospace; font-size: 0.9rem; text-align: center; font-weight: bold;"> MHz</span>
+                        <span>Loss: <strong id="cable-loss-readout" style="color: var(--danger);">--</strong> dB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
