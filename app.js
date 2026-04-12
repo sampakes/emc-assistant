@@ -143,6 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initDeviceManager() {
         const selector = document.getElementById('device-selector');
+        const addBtn = document.getElementById('add-device-btn');
+        const delBtn = document.getElementById('del-device-btn');
         
         function renderOptions() {
             selector.innerHTML = '';
@@ -159,6 +161,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (selector) selector.addEventListener('change', () => {
             appData.currentDevice = selector.value;
+            loadDeviceState();
+            calculateTable();
+        });
+
+        if (addBtn) addBtn.addEventListener('click', () => {
+            const name = prompt('Enter new device name:');
+            if (!name || name.trim() === '') return;
+            const trimmed = name.trim();
+            if (appData.devices.includes(trimmed)) {
+                alert(`"${trimmed}" already exists.`);
+                return;
+            }
+            appData.devices.push(trimmed);
+            DEFAULT_DATA[trimmed] = {};
+            appData.currentDevice = trimmed;
+            renderOptions();
+            loadDeviceState();
+            calculateTable();
+        });
+
+        if (delBtn) delBtn.addEventListener('click', () => {
+            if (appData.devices.length <= 1) {
+                alert('Cannot delete the last device.');
+                return;
+            }
+            const name = appData.currentDevice;
+            if (!confirm(`⚠️ Delete "${name}" and all its measurement data?\n\nThis cannot be undone.`)) return;
+            
+            const idx = appData.devices.indexOf(name);
+            appData.devices.splice(idx, 1);
+            delete DEFAULT_DATA[name];
+            appData.currentDevice = appData.devices[0];
+            renderOptions();
             loadDeviceState();
             calculateTable();
         });
