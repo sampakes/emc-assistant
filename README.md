@@ -1,52 +1,61 @@
-# EMC Pre-Compliance Assistant (ESCI 7 Simulation)
+# EMC Analysis Tool
 
-An interactive, web-based simulation of a Rohde & Schwarz ESCI 7 EMI Receiver, designed for educational purposes and pre-compliance estimation.
+A web-based radiated emission measurement and analysis tool for EMC pre-compliance testing per CISPR 32 / EN 55032. Built for a final year dissertation project using a Rohde & Schwarz ESCI 7 EMI Receiver.
 
-## Project Overview
+## Features
 
-This tool helps users understand the relationship between receiver voltage readings ($dB\mu V$), antenna factors ($dB/m$), and cable loss ($dB$) to determine the final Field Strength ($dB\mu V/m$) and compare it against CISPR limit lines.
+### Measurement Data Collection
+- **64-point input grid** — 4 antenna/polarisation configurations × 4 DUT rotations × 4 peaks per rotation
+- **Multi-device support** — Add, switch, and delete devices under test (DUT)
+- **Export/Import JSON** — Save and load measurement data as portable JSON files
 
-### Features
+### Automated Calculations
+- **Antenna Factor (AF)** — Automatically looked up via logarithmic interpolation of digitised manufacturer datasheet curves:
+  - Schwarzbeck VBA 6106 Biconical (30–300 MHz)
+  - Teseq UPA 6108 Directional (300–1000 MHz)
+- **Cable Loss** — Automatically looked up via linear interpolation of measured S21 insertion loss data (24 data points, 30–1000 MHz)
+- **Field Strength** — `E (dBµV/m) = Reading + AF + Cable Loss`
+- **Compliance Margin** — Compared against CISPR 32 Class B limits (40 dBµV/m below 230 MHz, 47 dBµV/m above)
 
-*   **Realistic Simulation**: Simulates the UI and behavior of a classic EMI receiver.
-*   **Physics-Based Rendering**:
-    *   **Digital Clock Mode**: Generates accurate harmonics at integer multiples of a fundamental frequency ($f_0, 2f_0, 3f_0...$) with realistic decay (40 dB/decade).
-    *   **SMPS Mode**: Simulates the broadband noise and envelope of a Switch Mode Power Supply.
-*   **Integrated Calculator**:
-    *   Input a Receiver Reading, Antenna Factor, and Cable Loss.
-    *   Automatically calculates **Field Strength**.
-    *   Drives the simulation visualization: The plotted peak **exactly matches** the calculated result for visual verification.
-*   **Compliance Limits**:
-    *   CISPR 32 Class A (Industrial) and Class B (Residential).
-    *   Distance correction logic (3m vs 10m).
-*   **Educational Proof**: "Show Math" feature explains the step-by-step calculation.
+### Visualisation
+- **Simulated ESCI 7 spectrum display** — Canvas-rendered with limit lines, noise floor, and colour-coded peak stems
+- **Three plot modes**:
+  - *Current Band* — 4 peaks from the active rotation
+  - *All Rotations* — All 16 peaks for the active antenna/polarisation
+  - *Overlay All* — All measurements from all configurations
+- **Interactive AF reference graphs** — Calibrated dot overlays on datasheet images with dashed crosshair guides and frequency input
+- **Cable loss chart** — Canvas-drawn S21 graph with interactive frequency lookup
 
-## Tech Stack
-
-*   **HTML5/CSS3**: Custom dark-themed "industrial" UI.
-*   **Vanilla JavaScript**: No framework dependencies. Handles all canvas rendering and physics logic.
-*   **Canvas API**: Used for real-time spectrum plotting.
+### Analysis
+- **Notable Peaks Summary** — Top 5 strongest emissions ranked by field strength with pass/fail margin colour coding
+- **Calculation Proof** — Collapsible section showing formula, CISPR 32 limits, and a fully worked example
 
 ## How to Run
 
-1.  Clone this repository.
-2.  Open `index.html` in any modern web browser.
-3.  No build step required.
+1. Clone this repository.
+2. Open `emc-analysis-tool.html` in any modern web browser.
+3. No build step or dependencies required.
 
-## Structure
+## File Structure
 
-*   `index.html`: Main interface structure.
-*   `style.css`: Styling for the chassis, screen, and controls.
-*   `app.js`: Application logic, harmonic generation physics, and calculator syncing.
+| File | Purpose |
+|------|---------|
+| `emc-analysis-tool.html` | Main interface |
+| `style.css` | Dark-themed UI styling |
+| `app.js` | Application logic, interpolation, canvas rendering |
+| `VBA 6106 Typical AF.png` | Biconical antenna factor datasheet graph |
+| `UPA 6108 Typical AF .png` | Directional antenna factor datasheet graph |
 
-## Usage Guide
+## Usage
 
-1.  **Select Mode**: Choose between "Clock" (Discrete harmonics) or "SMPS" (Broadband noise) in the Calculator panel.
-2.  **Enter Parameters**:
-    *   **Frequency**: The fundamental frequency of your source.
-    *   **Receiver Reading**: The value you "measured" (or want to simulate).
-    *   **Antenna/Cable**: Correction factors.
-3.  **Click "Calculate & Update Sim"**:
-    *   The tool computes the total Field Strength.
-    *   The Simulation screen updates to show a trace with the main peak exactly at that level.
-    *   Pass/Fail margin is calculated against the selected Limit Class.
+1. **Select or add a device** from the dropdown.
+2. **Enter frequency and reading** values in the measurement tables.
+3. **Click "Calculate & Update Sim"** — AF, cable loss, field strength, and margin are computed automatically.
+4. **Switch plot modes** to visualise peaks across rotations or all configurations.
+5. **Export data** as JSON to save measurements for later or share across machines.
+
+## Tech Stack
+
+- **HTML5 / CSS3** — Custom dark-themed industrial UI
+- **Vanilla JavaScript** — No frameworks or dependencies
+- **Canvas API** — Real-time spectrum and chart rendering
