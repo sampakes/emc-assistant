@@ -8,11 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
         simulatedLevel: 60,
 
         updateDisplay() {
-            // Header
-            document.getElementById('center-freq-readout').textContent =
-                `CENTER ${this.freq.center.toFixed(2)} MHz`;
-            document.querySelector('.rbw-ind').textContent = `RBW: 120 kHz`;
-
             // Marker
             const mkrEl = document.getElementById('marker-readout');
             if (this.marker.active) {
@@ -23,16 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 mkrEl.style.display = 'none';
             }
 
-            // Sync with Calculator Input (Source of Truth)
-            // If calculator has a value, we can use it, but typically we want the SIM to drive the calculation on boot?
-            // User requested: Calculator Input -> Sim. 
-            // So we just read DOM in drawScreen.
-
             drawScreen();
         }
     };
 
-    function writeFooter(msg) { document.getElementById('footer-msg').textContent = msg; }
+    function writeFooter(msg) { /* removed */ }
     // Legacy softkey and hardkey functions removed
 
     // --- Hardcoded Default Measurement Data ---
@@ -131,7 +121,94 @@ document.addEventListener('DOMContentLoaded', () => {
             ],
         },
         'DMU11': {
-            // Data will be added when user provides it
+            'tbody-dir-h': [
+                // 0° (3 peaks)
+                { f: '840',  r: '14.26', a: '', l: '' },
+                { f: '856',  r: '18.3',  a: '', l: '' },
+                { f: '904',  r: '14.85', a: '', l: '' },
+                { f: '',     r: '',      a: '', l: '' },
+                // 90°
+                { f: '680',  r: '15.29', a: '', l: '' },
+                { f: '792',  r: '16.29', a: '', l: '' },
+                { f: '856',  r: '22.9',  a: '', l: '' },
+                { f: '872',  r: '19.62', a: '', l: '' },
+                // 180°
+                { f: '664',  r: '14.49', a: '', l: '' },
+                { f: '728',  r: '13.95', a: '', l: '' },
+                { f: '856',  r: '17.69', a: '', l: '' },
+                { f: '872',  r: '16.7',  a: '', l: '' },
+                // 270°
+                { f: '648',  r: '17.17', a: '', l: '' },
+                { f: '760',  r: '17.3',  a: '', l: '' },
+                { f: '776',  r: '17.64', a: '', l: '' },
+                { f: '856',  r: '20.06', a: '', l: '' },
+            ],
+            'tbody-dir-v': [
+                // 0°
+                { f: '664',    r: '18.83', a: '', l: '' },
+                { f: '888',    r: '21.35', a: '', l: '' },
+                { f: '904',    r: '20.49', a: '', l: '' },
+                { f: '920',    r: '16.77', a: '', l: '' },
+                // 90°
+                { f: '648',    r: '17.88', a: '', l: '' },
+                { f: '664',    r: '18.81', a: '', l: '' },
+                { f: '856',    r: '22.24', a: '', l: '' },
+                { f: '888',    r: '18.53', a: '', l: '' },
+                // 180°
+                { f: '456.16', r: '18.04', a: '', l: '' },
+                { f: '664',    r: '18.48', a: '', l: '' },
+                { f: '888',    r: '20.9',  a: '', l: '' },
+                { f: '904',    r: '20.33', a: '', l: '' },
+                // 270°
+                { f: '648',    r: '17.32', a: '', l: '' },
+                { f: '664',    r: '18.8',  a: '', l: '' },
+                { f: '856',    r: '22.16', a: '', l: '' },
+                { f: '888',    r: '19.09', a: '', l: '' },
+            ],
+            'tbody-bic-h': [
+                // 0°
+                { f: '81.24',  r: '23.75', a: '', l: '' },
+                { f: '96.24',  r: '19.14', a: '', l: '' },
+                { f: '99.96',  r: '18.67', a: '', l: '' },
+                { f: '222.72', r: '20.56', a: '', l: '' },
+                // 90°
+                { f: '72',     r: '17.69', a: '', l: '' },
+                { f: '81.6',   r: '23.4',  a: '', l: '' },
+                { f: '126.92', r: '14.38', a: '', l: '' },
+                { f: '133.32', r: '15.4',  a: '', l: '' },
+                // 180°
+                { f: '54',     r: '15.57', a: '', l: '' },
+                { f: '82.6',   r: '15.75', a: '', l: '' },
+                { f: '100',    r: '22.21', a: '', l: '' },
+                { f: '144',    r: '14.25', a: '', l: '' },
+                // 270°
+                { f: '54.04',  r: '15.62', a: '', l: '' },
+                { f: '81.68',  r: '14.49', a: '', l: '' },
+                { f: '97.84',  r: '22.93', a: '', l: '' },
+                { f: '105.24', r: '13.68', a: '', l: '' },
+            ],
+            'tbody-bic-v': [
+                // 0°
+                { f: '80.76',  r: '22.29', a: '', l: '' },
+                { f: '110.4',  r: '20.11', a: '', l: '' },
+                { f: '204',    r: '20.69', a: '', l: '' },
+                { f: '181.84', r: '13.35', a: '', l: '' },
+                // 90°
+                { f: '81.24',  r: '23.75', a: '', l: '' },
+                { f: '100.16', r: '21.5',  a: '', l: '' },
+                { f: '181.84', r: '14.97', a: '', l: '' },
+                { f: '204.04', r: '18.8',  a: '', l: '' },
+                // 180° (N/A)
+                { f: '', r: '', a: '', l: '' },
+                { f: '', r: '', a: '', l: '' },
+                { f: '', r: '', a: '', l: '' },
+                { f: '', r: '', a: '', l: '' },
+                // 270° (N/A)
+                { f: '', r: '', a: '', l: '' },
+                { f: '', r: '', a: '', l: '' },
+                { f: '', r: '', a: '', l: '' },
+                { f: '', r: '', a: '', l: '' },
+            ],
         }
     };
 
@@ -383,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById(btn.dataset.tab).classList.add('active');
-            drawScreen();
+            calculateTable();
         });
     });
 
@@ -524,11 +601,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const info = tabLabels[tbodyId];
             if (!info || !rows) continue;
             rows.forEach((row, i) => {
-                const f = parseFloat(row.f), r = parseFloat(row.r), a = parseFloat(row.a);
+                const f = parseFloat(row.f), r = parseFloat(row.r);
                 if (isNaN(f) || isNaN(r) || f === 0) return;
+                const a = parseFloat(row.a) || lookupAF(f);
                 const l = interpolateCableLoss(f);
-                const total = r + (isNaN(a) ? 0 : a) + l;
-                const limit = f < 230 ? 40 : 47;
+                const total = r + a + l;
+                const distVal = parseInt(document.getElementById('dist').value) || 3;
+                const clsVal = document.getElementById('class').value || 'B';
+                const limit = getLimit(f, distVal, clsVal);
                 const margin = limit - total;
                 peaks.push({
                     freq: f, reading: r, af: a, loss: l, total: total,
@@ -574,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ctx = canvas.getContext('2d');
         const w = canvas.width;
         const h = canvas.height;
-        const pad = { l: 40, r: 20, t: 20, b: 30 };
+        const pad = { l: 55, r: 20, t: 20, b: 40 };
         const graphW = w - pad.l - pad.r;
         const graphH = h - pad.t - pad.b;
 
@@ -611,6 +691,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!started) { ctx.moveTo(pad.l + ix, y); started = true; } else ctx.lineTo(pad.l + ix, y);
         }
         ctx.stroke();
+
+        // Limit label
+        const clsLabel = cls === 'B' ? 'Class B' : 'Class A';
+        ctx.fillStyle = '#ff3333'; ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+        ctx.fillText(`CISPR 32 ${clsLabel} @ ${dist} m`, w - pad.r - 4, mapY(getLimit(startF + span, dist, cls)) - 4);
 
         const plotModeEl = document.querySelector('input[name="plot-mode"]:checked');
         const plotMode = plotModeEl ? plotModeEl.value : 'active';
@@ -685,6 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Axis Labels
         ctx.fillStyle = '#aaa'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.font = '11px Consolas, monospace';
         for (let i = 0; i <= 10; i += 2) {
             const ys = pad.t + graphH - i * (graphH / 10);
             ctx.fillText((i * 10).toString(), pad.l - 5, ys);
@@ -695,13 +782,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const f = startF + i * (span / 10);
             ctx.fillText(f.toFixed(0), pad.l + i * (graphW / 10), h - pad.b + 5);
         }
-        ctx.fillStyle = '#0f0'; ctx.fillText('MHz', pad.l + graphW / 2, h - 12);
+
+        // Axis Titles
+        ctx.fillStyle = '#fff'; ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText('Frequency (MHz)', pad.l + graphW / 2, h - 14);
+
+        ctx.save();
+        ctx.translate(12, pad.t + graphH / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillStyle = '#fff'; ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('Field Strength (dBµV/m)', 0, 0);
+        ctx.restore();
     }
 
     // Helpers
     function getLimit(f, dist, cls) {
         let l = (cls === 'B') ? (f <= 230 ? 30 : 37) : (f <= 230 ? 40 : 47);
-        if (dist === 3) l += 10.5;
+        if (dist === 3) l += 10;
         return l;
     }
 

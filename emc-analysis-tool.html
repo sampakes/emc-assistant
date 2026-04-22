@@ -22,21 +22,12 @@
             <div class="esci-display-area">
                 <!-- Screen -->
                 <div class="esci-screen">
-                    <div class="screen-header">
-                        <span class="header-left" id="center-freq-readout">CENTER 500.00 MHz</span>
-                        <span class="header-center">R&S ESCI 7 SIMULATION</span>
-                        <span class="header-right rbw-ind">RBW: 120 kHz</span>
-                    </div>
                     <div class="screen-plot-area">
-                        <canvas id="esci-canvas" width="600" height="350"></canvas>
+                        <canvas id="esci-canvas" width="700" height="420"></canvas>
                         <div id="marker-readout" class="marker-readout" style="display:none;">
                             MKR: <span id="mkr-freq">--</span> MHz <br>
                             LVL: <span id="mkr-level">--</span> dBµV/m
                         </div>
-                    </div>
-                    <div class="screen-footer">
-                        <span id="footer-msg">System Ready.</span>
-                        <span>ATT: AUTO</span>
                     </div>
                 </div>
 
@@ -254,8 +245,10 @@
         <!-- Calculation Proof -->
         <div class="card">
             <details id="calc-proof">
-                <summary style="cursor: pointer; font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; user-select: none;">
+                <summary style="cursor: pointer; font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; user-select: none; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; list-style: none;">
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #000; font-size: 1.1rem; font-weight: bold; flex-shrink: 0;" class="calc-toggle">+</span>
                     <span class="icon">🧮</span> Calculation Proof
+                    <span style="margin-left: auto; font-size: 0.75rem; color: #aaa;">Click to expand</span>
                 </summary>
                 <div style="margin-top: 16px; font-size: 0.9rem; line-height: 1.7; color: var(--text-secondary);">
                     <h3 style="margin-bottom: 8px; color: var(--text-main);">Formula</h3>
@@ -269,12 +262,14 @@
                         <li><strong>Cable Loss</strong> — Insertion loss (S21) of the 1 m coaxial cable assembly, measured via VNA and interpolated at the measurement frequency (dB)</li>
                     </ul>
 
-                    <h3 style="margin-bottom: 8px; color: var(--text-main);">CISPR 32 / EN 55032 Radiated Emission Limits (Class B, 3 m)</h3>
+                    <h3 style="margin-bottom: 8px; color: var(--text-main);">CISPR 32 / EN 55032 Radiated Emission Limits</h3>
                     <table class="data-table" style="font-size: 0.85rem; margin-bottom: 16px;">
-                        <thead><tr><th>Frequency Range</th><th>Limit (dBµV/m)</th></tr></thead>
+                        <thead><tr><th>Class</th><th>Frequency Range</th><th>Limit at 3 m (dBµV/m)</th><th>Limit at 10 m (dBµV/m)</th></tr></thead>
                         <tbody>
-                            <tr><td>30 – 230 MHz</td><td>40</td></tr>
-                            <tr><td>230 – 1000 MHz</td><td>47</td></tr>
+                            <tr><td>Class A</td><td>30 – 230 MHz</td><td>50</td><td>40</td></tr>
+                            <tr><td>Class A</td><td>230 – 1000 MHz</td><td>57</td><td>47</td></tr>
+                            <tr><td>Class B</td><td>30 – 230 MHz</td><td>40</td><td>30</td></tr>
+                            <tr><td>Class B</td><td>230 – 1000 MHz</td><td>47</td><td>37</td></tr>
                         </tbody>
                     </table>
                     <p style="margin-bottom: 16px;"><strong>Margin (dB)</strong> = Limit − E. A positive margin means the emission is below the limit (pass). A margin ≥ 6 dB provides confidence for full compliance testing.</p>
