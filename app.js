@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Each row: { f: freq, r: reading, a: AF (blank until datasheet), l: loss }
     // Row order: 0° (×4), 90° (×4), 180° (×4), 270° (×4)
     const DEFAULT_DATA = {
-        'STM32 Demo Board': {
+        'STM32 Development Board': {
             'tbody-dir-h': [
                 // 0°
                 { f: '350',    r: '23.2',  a: '15',   l: '1.5' },
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 { f: '856',    r: '22.24', a: '', l: '' },
                 { f: '888',    r: '18.53', a: '', l: '' },
                 // 180°
-                { f: '456.16', r: '18.04', a: '', l: '' },
+                { f: '648',    r: '18.04', a: '', l: '' },
                 { f: '664',    r: '18.48', a: '', l: '' },
                 { f: '888',    r: '20.9',  a: '', l: '' },
                 { f: '904',    r: '20.33', a: '', l: '' },
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Device State Manager (in-memory, no localStorage) ---
     let appData = {
         devices: Object.keys(DEFAULT_DATA),
-        currentDevice: Object.keys(DEFAULT_DATA)[0] || 'STM32 Demo Board',
+        currentDevice: Object.keys(DEFAULT_DATA)[0] || 'STM32 Development Board',
     };
 
     function initDeviceManager() {
