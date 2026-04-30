@@ -11,14 +11,14 @@ A web-based radiated emission measurement and analysis tool for EMC pre-complian
 
 ### Automated Calculations
 - **Antenna Factor (AF)** — Automatically looked up via logarithmic interpolation of digitised manufacturer datasheet curves:
-  - Schwarzbeck VBA 6106 Biconical (30–300 MHz)
+  - Teseq VBA 6106 Biconical (30–300 MHz)
   - Teseq UPA 6108 Directional (300–1000 MHz)
 - **Cable Loss** — Automatically looked up via linear interpolation of measured S21 insertion loss data (24 data points, 30–1000 MHz)
-- **Field Strength** — `E (dBµV/m) = Reading + AF + Cable Loss`
-- **Compliance Margin** — Compared against CISPR 32 Class B limits (40 dBµV/m below 230 MHz, 47 dBµV/m above)
+- **Field Strength** — `Field Strength (dBµV/m) = Reading + AF + Cable Loss`
+- **Compliance Margin** — Compared against CISPR 32 Class A and Class B limits at 3 m and 10 m distance
 
 ### Visualisation
-- **Simulated ESCI 7 spectrum display** — Canvas-rendered with limit lines, noise floor, and colour-coded peak stems
+- **Spectrum display** — Canvas-rendered with limit lines, noise floor, and colour-coded peak stems
 - **Three plot modes**:
   - *Current Band* — 4 peaks from the active rotation
   - *All Rotations* — All 16 peaks for the active antenna/polarisation

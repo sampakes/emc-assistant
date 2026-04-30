@@ -578,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (calcTableBtn) calcTableBtn.addEventListener('click', calculateTable);
 
     document.querySelectorAll('input[name="plot-mode"]').forEach(r => r.addEventListener('change', calculateTable));
+    document.getElementById('y-zoom').addEventListener('change', () => drawScreen());
 
     // --- Notable Peaks Summary ---
     function generateNotablePeaks() {
@@ -668,7 +669,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const span = Receiver.freq.span;
         const mapX = (f) => pad.l + ((f - startF) / span) * graphW;
 
-        const minL = 0, maxL = 100;
+        const yZoomEl = document.getElementById('y-zoom');
+        const yParts = (yZoomEl ? yZoomEl.value : '0-100').split('-');
+        const minL = parseInt(yParts[0]), maxL = parseInt(yParts[1]);
         const mapY = (l) => pad.t + graphH - ((Math.min(maxL, Math.max(minL, l)) - minL) / (maxL - minL)) * graphH;
 
         // Grid lines
@@ -770,14 +773,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Axis Labels
-        ctx.fillStyle = '#aaa'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-        ctx.font = '11px Consolas, monospace';
+        ctx.fillStyle = '#ddd'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.font = 'bold 14px Consolas, monospace';
         for (let i = 0; i <= 10; i += 2) {
             const ys = pad.t + graphH - i * (graphH / 10);
-            ctx.fillText((i * 10).toString(), pad.l - 5, ys);
+            const label = minL + (i / 10) * (maxL - minL);
+            ctx.fillText(label.toFixed(0), pad.l - 5, ys);
         }
 
-        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillStyle = '#ddd'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.font = 'bold 14px Consolas, monospace';
         for (let i = 0; i <= 10; i += 2) {
             const f = startF + i * (span / 10);
             ctx.fillText(f.toFixed(0), pad.l + i * (graphW / 10), h - pad.b + 5);

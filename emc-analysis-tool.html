@@ -50,8 +50,8 @@
                             <button id="add-device-btn" style="background: var(--primary); color: #000; border:none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size:1rem; font-weight:bold;">+</button>
                             <button id="del-device-btn" style="background: var(--danger); color: #fff; border:none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size:0.8rem; font-weight:bold;">🗑</button>
                             <span style="border-left: 1px solid var(--border); height: 20px; margin: 0 4px;"></span>
-                            <button id="export-data-btn" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;" title="Export data as JSON">📥 Export</button>
-                            <button id="import-data-btn" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;" title="Import data from JSON">📤 Import</button>
+                            <button id="export-data-btn" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;" title="Export data as JSON">📤 Export</button>
+                            <button id="import-data-btn" style="background: var(--surface); color: var(--text-main); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;" title="Import data from JSON">📥 Import</button>
                             <input type="file" id="import-file-input" accept=".json" style="display: none;">
                         </div>
                     </div>
@@ -96,6 +96,17 @@
                              <span style="color: #00ff00;">■ Bic ↕</span>
                              <span style="color: #ffaa00;">■ Bic ↔</span>
                          </div>
+                     </div>
+                     <div style="border-left: 1px solid var(--border); padding-left: 15px; display: flex; flex-direction: column; justify-content: center;">
+                         <label style="font-size: 0.75rem; color: #aaa; margin-bottom: 5px; text-transform: uppercase;">Y-Axis Range</label>
+                         <select id="y-zoom" style="padding: 6px 12px; font-size: 0.85rem;">
+                             <option value="0-100" selected>0 – 100 dBµV/m</option>
+                             <option value="0-70">0 – 70 dBµV/m</option>
+                             <option value="0-60">0 – 60 dBµV/m</option>
+                             <option value="10-60">10 – 60 dBµV/m</option>
+                             <option value="20-60">20 – 60 dBµV/m</option>
+                             <option value="30-55">30 – 55 dBµV/m</option>
+                         </select>
                      </div>
                 </div>
             </div>
@@ -254,7 +265,7 @@
                 <div style="margin-top: 16px; font-size: 0.9rem; line-height: 1.7; color: var(--text-secondary);">
                     <h3 style="margin-bottom: 8px; color: var(--text-main);">Formula</h3>
                     <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px; font-family: monospace; font-size: 0.95rem; margin-bottom: 16px;">
-                        <strong>E (dBµV/m)</strong> = Reading (dBµV) + AF (dB/m) + Cable Loss (dB)
+                        <strong>Field Strength (dBµV/m)</strong> = Reading (dBµV) + AF (dB/m) + Cable Loss (dB)
                     </div>
                     <p>Where:</p>
                     <ul style="margin: 8px 0 16px 20px;">
@@ -352,7 +363,10 @@
         <div class="card">
             <h2><span class="icon">📉</span> Cable Loss (S21 Measurement)</h2>
             <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 15px;">
-                Measured insertion loss (S21) of the 1 m coaxial cable assembly across 30–1000 MHz. Values represent the total system loss including cable attenuation and connector interface losses. The higher loss at lower frequencies is attributed to connector impedance mismatch, which dominates when the cable is electrically short (λ/10 at 30 MHz). At higher frequencies the connectors match better, and the measured S21 more closely reflects the cable's intrinsic attenuation.
+                Measured S21 insertion loss of the 1 m coaxial cable assembly from 30 MHz to 1 GHz.
+                These values include cable attenuation, connector losses, and mismatch effects.
+                The measured loss is used as a frequency-dependent correction in the field-strength calculation.
+                Loss values are treated as positive corrections and added with the antenna factor.
             </p>
             <div style="text-align: center;">
                 <canvas id="cable-loss-canvas" width="700" height="320" style="width: 100%; max-width: 700px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff;"></canvas>
